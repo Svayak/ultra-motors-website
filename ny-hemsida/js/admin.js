@@ -487,7 +487,7 @@
         :'<p class="mini">Inga ordrar än.</p>')+
       '<div class="modal-actions">'+
         (c.tel?'<a class="btn" style="margin-right:auto" href="tel:'+esc(String(c.tel).replace(/\s/g,""))+'">📞 Ring</a>':'')+
-        '<button class="btn" onclick="document.getElementById(\'overlay\').classList.remove(\'open\')">Stäng</button>'+
+        '<button class="btn" data-close="1">Stäng</button>'+
         '<button class="btn primary" id="cEdit">Redigera</button>'+
       '</div>'
     );
@@ -512,7 +512,7 @@
       '<div class="field"><label>Status</label><select id="f_status">'+["aktiv","pausad","vantar"].map(function(s){return '<option value="'+s+'"'+(s===c.status?' selected':'')+'>'+cap(s)+'</option>';}).join('')+'</select></div>'+
       '<div class="field"><label>Noter</label><textarea id="f_noter" rows="2">'+esc(c.noter)+'</textarea></div>'+
       '<div class="modal-actions">'+(id?'<button class="btn" id="delCust" style="margin-right:auto;color:var(--red)">Ta bort</button>':'')+
-      '<button class="btn" onclick="document.getElementById(\'overlay\').classList.remove(\'open\')">Avbryt</button>'+
+      '<button class="btn" data-close="1">Avbryt</button>'+
       '<button class="btn primary" id="saveCust">Spara</button></div>');
     var ig=$("#f_ingen"); if(ig) ig.addEventListener("change",function(){ $("#f_kredit").disabled=this.checked; });
     $("#saveCust").addEventListener("click",function(){
@@ -548,7 +548,7 @@
       document.querySelectorAll("[data-price]").forEach(function(b){b.addEventListener("click",function(){ var v=prompt("Nytt pris ex moms för "+b.dataset.price+":",b.dataset.cur); if(v!=null&&v!==""){ S.priceOverrides[b.dataset.price]=Math.round(+v)||0; save(); render(); } });});
     };
     $("#qp").addEventListener("input",render);
-    $("#openExcel").addEventListener("click",function(){ modal('<h3>Redigera prislistan</h3><p>Produkter och priser ligger i <b>produkter.xlsx</b> i webbplatsmappen.</p><ol style="margin:12px 0 0 18px;line-height:1.8"><li>Öppna <b>produkter.xlsx</b> och ändra fritt.</li><li>Dubbelklicka <b>konvertera-produkter.command</b>.</li><li>Ladda om sidan – nya priser syns.</li></ol><div class="modal-actions"><button class="btn primary" onclick="document.getElementById(\'overlay\').classList.remove(\'open\')">Okej</button></div>'); });
+    $("#openExcel").addEventListener("click",function(){ modal('<h3>Redigera prislistan</h3><p>Produkter och priser ligger i <b>produkter.xlsx</b> i webbplatsmappen.</p><ol style="margin:12px 0 0 18px;line-height:1.8"><li>Öppna <b>produkter.xlsx</b> och ändra fritt.</li><li>Dubbelklicka <b>konvertera-produkter.command</b>.</li><li>Ladda om sidan – nya priser syns.</li></ol><div class="modal-actions"><button class="btn primary" data-close="1">Okej</button></div>'); });
     $("#addProd").addEventListener("click",function(){ addProd(); });
     $("#mgCats").addEventListener("click",function(){ manageCats(); });
     render();
@@ -564,7 +564,7 @@
       '<p class="mini" style="margin-bottom:14px">Byt namn genom att skriva i fältet – alla produkter i kategorin följer med. Lägg till en ny kategori längst ned. Ändringar sparas lokalt (demo); i skarp drift skrivs de tillbaka till katalogen tillsammans med prislistan.</p>'+
       '<div style="max-height:46vh;overflow:auto;padding-right:4px"><table class="cat-tbl"><thead><tr><th>Kategori</th><th class="num">Antal</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
       '<div class="row" style="margin-top:14px;align-items:flex-end"><div class="field" style="flex:1"><label>Ny kategori</label><input id="newCat" placeholder="t.ex. Ventilfjädrar"></div><button class="btn sm" id="addCatBtn" style="margin-bottom:2px">+ Lägg till</button></div>'+
-      '<div class="modal-actions"><button class="btn" onclick="document.getElementById(\'overlay\').classList.remove(\'open\')">Avbryt</button><button class="btn primary" id="saveCats">Spara ändringar</button></div>');
+      '<div class="modal-actions"><button class="btn" data-close="1">Avbryt</button><button class="btn primary" id="saveCats">Spara ändringar</button></div>');
     $("#addCatBtn").addEventListener("click",function(){
       if(addCat($("#newCat").value)){ closeModal(); manageCats(); }
       else { alert("Ange ett nytt, unikt kategorinamn."); }
@@ -588,7 +588,7 @@
       '<div class="field"><label>Beskrivning</label><input id="p_besk"></div>'+
       '<div class="row"><div class="field"><label>Pris ex moms</label><input id="p_ex" type="number" min="0"></div><div class="field"><label>Pris ink moms (auto)</label><input id="p_inkl" type="number" readonly style="background:var(--surface)"></div></div>'+
       '<p class="mini">Pris ink. moms räknas automatiskt (ex moms × 1,25). Kategori och märke väljs bland de som redan finns; nya läggs till i produkter.xlsx.</p>'+
-      '<div class="modal-actions"><button class="btn" onclick="document.getElementById(\'overlay\').classList.remove(\'open\')">Avbryt</button><button class="btn primary" id="saveProd">Lägg till</button></div>');
+      '<div class="modal-actions"><button class="btn" data-close="1">Avbryt</button><button class="btn primary" id="saveProd">Lägg till</button></div>');
     $("#p_ex").addEventListener("input",function(){ $("#p_inkl").value=Math.round((+this.value||0)*1.25); });
     $("#saveProd").addEventListener("click",function(){
       S.extraProducts=S.extraProducts||[];
@@ -999,5 +999,7 @@
   function lineOpts(){return{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{maxTicksLimit:8}}}};}
   function modal(html){ $("#modal").innerHTML=html; $("#overlay").classList.add("open"); }
   function closeModal(){ $("#overlay").classList.remove("open"); }
+  // Stäng-knappar i modaler (ersätter inline onclick – krävs för strikt CSP)
+  document.addEventListener("click", function(e){ if(e.target.closest("[data-close]")) closeModal(); });
   $("#overlay").addEventListener("click",function(e){ if(e.target===this) closeModal(); });
 })();

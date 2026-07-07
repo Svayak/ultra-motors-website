@@ -38,7 +38,14 @@ for r in ws.iter_rows(min_row=2, values_only=True):
 with open("js/products.js","w",encoding="utf-8") as f:
     f.write("// Autogenererad från produkter.xlsx – redigera Excel-filen och kör konvertera-produkter.command\n")
     f.write("window.PRODUCTS = "+json.dumps(rows,ensure_ascii=False,indent=0)+";\n")
-print(f"Klart! {len(rows)} produkter skrivna till js/products.js")
+
+# Server-sidans priskatalog (så backend kan sätta priser själv, inte lita på klienten)
+import os
+cat={r["artikelnr"]:{"pris_ex":r["pris_ex"],"kategori":r["kategori"],"marke":r["marke"],"beskrivning":r["beskrivning"]} for r in rows if r["artikelnr"]}
+os.makedirs("../api/data", exist_ok=True)
+with open("../api/data/catalog.json","w",encoding="utf-8") as f:
+    json.dump(cat,f,ensure_ascii=False)
+print(f"Klart! {len(rows)} produkter skrivna till js/products.js och api/data/catalog.json")
 PY
 echo ""
 echo "Uppdatera klart. Ladda om bestall.html i webbläsaren."

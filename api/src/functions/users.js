@@ -11,7 +11,7 @@ app.http("users", {
   methods: ["GET", "POST", "OPTIONS"], authLevel: "anonymous", route: "users",
   handler: async (req) => {
     if (req.method === "OPTIONS") return preflight();
-    const p = auth.requireAuth(req);
+    const p = await auth.requireUser(req);
     if (!auth.isAdmin(p)) return json(403, { ok: false, error: "Kräver admin" });
 
     if (req.method === "GET") {
@@ -20,8 +20,10 @@ app.http("users", {
     }
     const b = await readBody(req);
     if (!b.username || !b.password) return json(400, { ok: false, error: "username och password krävs" });
+    if (String(b.password).length < 8) return json(400, { ok: false, error: "Lösenordet måste vara minst 8 tecken" });
     const u = {
-      username: String(b.username).toLowerCase(), name: b.name || b.username, role: b.role || "personal",
+      username: String(b.username).toLowerCase().slice(0, 60), name: String(b.name || b.username).slice(0, 120),
+      role: b.role === "admin" ? "admin" : "personal",
       pwhash: auth.hashPassword(b.password), skapad: new Date().toISOString().slice(0, 10)
     };
     await repo.users.save(u);

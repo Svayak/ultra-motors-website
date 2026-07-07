@@ -19,13 +19,25 @@
   function invStatus(o) { var f = o.faktura; if (!f) return null; if (f.betald) return "Betald"; if (!f.skickad) return "Ej skickad"; if (daysBetween(f.forfaller) > 0) return "Förfallen"; return "Skickad"; }
 
   // ---------- login ----------
+  var API = (window.UM_API && window.UM_API.enabled && window.UM_API.enabled()) ? window.UM_API : null;
+  // I skarp drift krävs riktig admin-inloggning (inte en hårdkodad kod).
+  if (API) { var uf = $("#sauser"); if (uf) uf.style.display = ""; var hh = $("#sahint"); if (hh) hh.textContent = "Logga in med ett admin-konto."; $("#sapw").placeholder = "Lösenord"; }
   $("#saloginbtn").addEventListener("click", tryLogin);
   $("#sapw").addEventListener("keydown", function (e) { if (e.key === "Enter") tryLogin(); });
+  var suEl = $("#sauser"); if (suEl) suEl.addEventListener("keydown", function (e) { if (e.key === "Enter") tryLogin(); });
+  function enterSA() { $("#salogin").style.display = "none"; $("#saapp").style.display = ""; S = loadState(); route("funktioner"); }
   function tryLogin() {
-    if ($("#sapw").value.trim().toLowerCase() === "ultra-dev") {
-      $("#salogin").style.display = "none"; $("#saapp").style.display = "";
-      S = loadState(); route("funktioner");
-    } else { $("#sapw").value = ""; $("#sapw").placeholder = "Fel kod – prova 'ultra-dev'"; }
+    if (API) {
+      var u = (($("#sauser") && $("#sauser").value) || "").trim(), p = $("#sapw").value;
+      if (!u || !p) { $("#sapw").placeholder = "Fyll i användarnamn och lösenord"; return; }
+      API.login(u, p).then(function (r) {
+        if (!r || !r.user || r.user.role !== "admin") { if (API.logout) API.logout(); throw new Error("ej admin"); }
+        enterSA();
+      }).catch(function () { $("#sapw").value = ""; $("#sapw").placeholder = "Fel uppgifter eller inte admin"; });
+    } else {
+      if ($("#sapw").value.trim().toLowerCase() === "ultra-dev") { enterSA(); }
+      else { $("#sapw").value = ""; $("#sapw").placeholder = "Fel kod – prova 'ultra-dev'"; }
+    }
   }
 
   // ---------- router ----------

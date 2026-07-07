@@ -44,4 +44,15 @@ function bearer(req) {
 function requireAuth(req) { return verifyToken(bearer(req)); }
 function isAdmin(p) { return !!p && p.role === "admin"; }
 
-module.exports = { hashPassword, verifyPassword, sign, verifyToken, requireAuth, bearer, isAdmin };
+// Verifierar token OCH att användaren fortfarande finns kvar (ger revokering:
+// ett borttaget konto ogiltigförklarar alla dess tokens direkt).
+async function requireUser(req) {
+  const p = verifyToken(bearer(req));
+  if (!p) return null;
+  const repo = require("./db/repo");
+  const u = await repo.users.get(p.username);
+  if (!u) return null;
+  return { username: u.username, role: u.role || "personal", name: u.name || u.username };
+}
+
+module.exports = { hashPassword, verifyPassword, sign, verifyToken, requireAuth, requireUser, bearer, isAdmin };
