@@ -68,6 +68,8 @@
     { id: "ARP", logo: "img/ARP-e1539076860624.jpg", desc: "Bultar och pinnbultar – topplock, vevstake, ramlager, svänghjul och remskiva." },
     { id: "ACL", logo: "img/acl200-1-e1540197541830.jpg", desc: "Motorlager för de flesta tillämpningar." }
   ];
+  // Rensar bort kortkoderna VL/RL/AL ur beskrivningen (kategorin visar redan typen)
+  function cleanDesc(s) { return String(s || "").replace(/\b(?:VL|RL|AL)\b/g, "").replace(/\s{2,}/g, " ").trim(); }
   function isSpecial(p) { return /U/i.test(p.artikelnr || ""); }
   function countMfr(id) { return PRODUCTS.filter(function (p) { return p._mfr === id; }).length; }
 
@@ -143,11 +145,12 @@
     el("count").textContent = rows.length + " produkter" + (activeCat !== "Alla" ? " i " + activeCat : "") + (activeBrand ? " · " + activeBrand : "") + (activeSpecial ? " · endast specialsatser" : "");
     if (!rows.length) { el("list").innerHTML = '<div class="prod-empty">Inga produkter matchar ditt val.</div>'; return; }
     el("list").innerHTML = rows.slice(0, 400).map(function (p) {
+      var d = cleanDesc(p.beskrivning);
       return '<div class="prod-row">' +
         '<div><div class="prod-name">' + esc(p.artikelnr) +
         (isSpecial(p) ? '<span class="prod-tag prod-tag--special">Specialsats</span>' : '') +
         '<span class="prod-tag">' + esc(p.kategori) + '</span></div>' +
-        '<div class="prod-meta">' + esc(p.marke) + ' · ' + esc(p.beskrivning) + '</div></div>' +
+        '<div class="prod-meta">' + esc(p.marke) + (d ? ' · ' + esc(d) : '') + '</div></div>' +
         '<div class="prod-price"><b>' + kr(p.pris_ex) + '</b><span>' + kr(p.pris_inkl) + ' ink. moms</span></div>' +
         '<button class="prod-add" data-add="' + p._id + '">Lägg till</button>' +
         '</div>';
