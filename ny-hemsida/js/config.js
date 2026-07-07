@@ -4,7 +4,7 @@
 //   Körs API:t separat: ange full URL, t.ex. "https://ultramotors-api.azurewebsites.net/api".
 //   Lämnas tomt = demoläge (data sparas lokalt i webbläsaren, inget backend anropas).
 window.UM_CONFIG = {
-  apiBase: "",
+  apiBase: "/api",
   // Bakåtkompatibelt: används av kassan om apiBase är tomt. Sätts normalt = apiBase + "/orders".
   orderEndpoint: ""
 };
