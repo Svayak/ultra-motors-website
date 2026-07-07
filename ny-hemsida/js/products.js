@@ -4261,7 +4261,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Kamlager",
 "marke": "Chevrolet",
 "beskrivning": "Small Block KL",
 "artikelnr": "5C3349",

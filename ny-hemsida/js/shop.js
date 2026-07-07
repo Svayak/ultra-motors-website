@@ -104,14 +104,18 @@
   function buildChips() {
     var cats = ["Alla"].concat(PRODUCTS.filter(inMfr).map(function (p) { return p.kategori; })
       .filter(function (v, i, a) { return a.indexOf(v) === i; }));
-    el("chips").innerHTML = cats.map(function (c) {
+    var html = cats.map(function (c) {
       return '<button class="chip' + (c === activeCat ? ' active' : '') + '" data-cat="' + c + '">' + c + '</button>';
     }).join("");
+    // Specialsatser är ett fristående, valbart filter (kombineras med kategorin)
+    if (flag("specialsatser")) html += '<button class="chip chip--special' + (activeSpecial ? ' active' : '') + '" data-special="1">Specialsatser</button>';
+    el("chips").innerHTML = html;
   }
   el("chips").addEventListener("click", function (e) {
     var b = e.target.closest(".chip"); if (!b) return;
+    if (b.dataset.special != null) { activeSpecial = !activeSpecial; b.classList.toggle("active", activeSpecial); renderList(); return; }
     activeCat = b.dataset.cat;
-    [].forEach.call(this.querySelectorAll(".chip"), function (c) { c.classList.toggle("active", c.dataset.cat === activeCat); });
+    [].forEach.call(this.querySelectorAll(".chip[data-cat]"), function (c) { c.classList.toggle("active", c.dataset.cat === activeCat); });
     renderList();
   });
 
@@ -126,7 +130,6 @@
       list.map(function (b) { return '<option value="' + esc(b) + '">' + esc(b) + '</option>'; }).join("");
   }
   el("brand").addEventListener("change", function () { activeBrand = this.value; renderList(); });
-  if (el("special")) el("special").addEventListener("change", function () { activeSpecial = this.checked; renderList(); });
 
   // ---- Produktlista ----
   function filtered() {
@@ -227,10 +230,7 @@
     document.querySelector(".cart").style.display = "none";
     return;
   }
-  // Dölj specialsatser-filtret om avstängt.
-  if (!flag("specialsatser")) {
-    var st = el("special"); if (st && st.closest(".shop-toggle")) st.closest(".shop-toggle").style.display = "none";
-  }
+  // (Specialsatser-filtret ligger nu som en chip i kategori-raden och gatas i buildChips.)
 
   renderPicker(); renderCart();
 })();
