@@ -184,8 +184,8 @@
     body.innerHTML =
       '<ul class="cart-items">' + lines.map(function (l) {
         return '<li class="cart-item">' +
-          '<div><div class="ci-name">' + esc(l.p.beskrivning) + '</div>' +
-          '<div class="ci-art">' + esc(l.p.marke) + ' · ' + esc(l.p.artikelnr) + '</div>' +
+          '<div><div class="ci-name">' + esc(l.p.artikelnr) + '</div>' +
+          '<div class="ci-art">' + esc(l.p.kategori || l.p.beskrivning) + (l.p.marke ? ' · ' + esc(l.p.marke) : '') + '</div>' +
           '<div class="qty"><button data-dec="' + l.p._id + '">−</button>' +
           '<input readonly value="' + l.qty + '"><button data-inc="' + l.p._id + '">+</button></div> ' +
           '<button class="ci-remove" data-rem="' + l.p._id + '">ta bort</button></div>' +

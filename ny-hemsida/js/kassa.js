@@ -28,7 +28,7 @@
     el("summary").innerHTML =
       '<ul class="cart-items">' + ls.map(function (l) {
         return '<li class="cart-item"><div><div class="ci-name">' + esc(l.p.artikelnr) + '</div>' +
-          '<div class="ci-art">' + esc(l.p.marke) + ' · ' + esc(l.p.beskrivning) + '</div>' +
+          '<div class="ci-art">' + esc(l.p.kategori || l.p.beskrivning) + (l.p.marke ? ' · ' + esc(l.p.marke) : '') + '</div>' +
           '<div class="ci-art">' + l.qty + ' × ' + kr(l.p.pris_ex) + '</div></div>' +
           '<div class="ci-line">' + kr(l.p.pris_ex * l.qty) + '</div></li>';
       }).join("") + '</ul>' +
@@ -57,7 +57,7 @@
       var order = {
         ordernr: ordernr, referens: d.referens, meddelande: d.meddelande, epost: d.epost, betalsatt: "Faktura",
         kund: { foretag: d.foretag, orgnr: d.orgnr, epost: d.epost, tel: d.tel, adress: d.adress },
-        items: ls.map(function (l) { return { namn: l.p.marke + " " + l.p.beskrivning, artikelnr: l.p.artikelnr, antal: l.qty, pris_ex: l.p.pris_ex }; })
+        items: ls.map(function (l) { return { namn: ((l.p.kategori || "") + (l.p.marke ? " " + l.p.marke : "") + (l.p.beskrivning ? " (" + l.p.beskrivning + ")" : "")).trim(), artikelnr: l.p.artikelnr, antal: l.qty, pris_ex: l.p.pris_ex }; })
       };
 
       var nyKundNote = "Eftersom detta är ert första köp gör vi en kreditkontroll av företaget innan leverans. Vi sparar era uppgifter för att förenkla framtida köp.";
