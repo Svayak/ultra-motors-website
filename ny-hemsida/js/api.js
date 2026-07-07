@@ -11,7 +11,8 @@
 
   async function req(method, path, body, authed) {
     var headers = { "Content-Type": "application/json" };
-    if (authed && token()) headers["Authorization"] = "Bearer " + token();
+    // Egen header (Static Web Apps släpper igenom den; "Authorization" reserveras av SWA).
+    if (authed && token()) { headers["x-ums-auth"] = "Bearer " + token(); headers["Authorization"] = "Bearer " + token(); }
     var res = await fetch(BASE + path, {
       method: method, headers: headers,
       body: body != null ? JSON.stringify(body) : undefined

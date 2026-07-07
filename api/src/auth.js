@@ -34,7 +34,11 @@ function verifyToken(token) {
 }
 
 function bearer(req) {
-  const h = (req.headers && req.headers.get) ? req.headers.get("authorization") : (req.headers && req.headers.authorization) || "";
+  // Azure Static Web Apps reserverar "Authorization" för sin egen auth, så vi läser
+  // i första hand en egen header (x-ums-auth) och faller tillbaka på Authorization.
+  let h = "";
+  if (req.headers && req.headers.get) h = req.headers.get("x-ums-auth") || req.headers.get("authorization") || "";
+  else if (req.headers) h = req.headers["x-ums-auth"] || req.headers.authorization || "";
   return h ? String(h).replace(/^Bearer\s+/i, "") : null;
 }
 function requireAuth(req) { return verifyToken(bearer(req)); }

@@ -92,7 +92,11 @@
       var u=(($("#user")&&$("#user").value)||"").trim(), p=$("#pw").value;
       if(!u||!p){ $("#pw").placeholder="Fyll i användarnamn och lösenord"; return; }
       var old=btn.textContent; btn.disabled=true; btn.textContent="Loggar in…";
-      API.login(u,p).then(function(){ S=load(); return loadRemote(); })
+      API.login(u,p).then(function(){
+        // Inloggning lyckades – hämta data. Misslyckas datan blockerar vi inte inloggningen.
+        S=load();
+        return loadRemote().catch(function(){ alert("Inloggad, men kunde inte hämta ordrar/kunder från servern just nu. Prova ↻ Uppdatera från servern."); });
+      })
         .then(function(){ btn.disabled=false; btn.textContent=old; enterApp(); })
         .catch(function(){ btn.disabled=false; btn.textContent=old; $("#pw").value=""; $("#pw").placeholder="Fel användarnamn eller lösenord"; });
     } else {
