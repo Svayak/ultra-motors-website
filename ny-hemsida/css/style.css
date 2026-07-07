@@ -323,6 +323,7 @@ p { color: var(--color-muted); }
 .shop-select { padding: 12px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: inherit; font-size: 1rem; background: #fff; min-width: 180px; cursor: pointer; }
 .shop-select:focus { outline: none; border-color: var(--color-accent); }
 .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.chip-break { flex-basis: 100%; height: 0; }
 .chip { padding: 8px 14px; border: 1px solid var(--color-border); border-radius: 999px; background: #fff; font-size: .85rem; font-weight: 600; cursor: pointer; color: var(--color-muted); transition: .15s; }
 .chip:hover { border-color: var(--color-accent); color: var(--color-accent); }
 .chip.active { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }

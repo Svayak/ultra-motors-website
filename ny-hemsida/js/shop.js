@@ -107,8 +107,8 @@
     var html = cats.map(function (c) {
       return '<button class="chip' + (c === activeCat ? ' active' : '') + '" data-cat="' + c + '">' + c + '</button>';
     }).join("");
-    // Specialsatser är ett fristående, valbart filter (kombineras med kategorin)
-    if (flag("specialsatser")) html += '<button class="chip chip--special' + (activeSpecial ? ' active' : '') + '" data-special="1">Specialsatser</button>';
+    // Specialsatser är ett fristående, valbart filter på egen rad under kategorierna
+    if (flag("specialsatser")) html += '<div class="chip-break"></div><button class="chip chip--special' + (activeSpecial ? ' active' : '') + '" data-special="1">Specialsatser</button>';
     el("chips").innerHTML = html;
   }
   el("chips").addEventListener("click", function (e) {
