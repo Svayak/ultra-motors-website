@@ -11,6 +11,27 @@
   function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
   function flag(n){ return window.umFlag ? window.umFlag(n) : true; } // funktionsväxlar (superadmin)
   function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
+
+  // ---------- backend (API) ----------
+  // Aktiveras när UM_CONFIG.apiBase är satt. Annars körs allt lokalt (demoläge).
+  var API = (window.UM_API && window.UM_API.enabled && window.UM_API.enabled()) ? window.UM_API : null;
+  function loadRemote(){
+    if(!API) return Promise.resolve();
+    return Promise.all([API.listOrders(), API.listCustomers()]).then(function(r){
+      S.orders = r[0] || []; S.customers = r[1] || [];
+    });
+  }
+  function persistOrder(o){
+    if(!API || !o || !o.id) return;
+    API.updateOrder(o.id, { status:o.status, godkand:!!o.godkand, nekad:!!o.nekad, ny_kund:!!o.ny_kund, kundId:o.kundId||null, betald:!!o.betald })
+      .catch(function(){ alert("Kunde inte spara ändringen till servern – kontrollera nätverket och ladda om sidan."); });
+  }
+  function persistCustomer(c, isNew){
+    if(!API || !c) return;
+    var p = isNew ? API.createCustomer(c) : API.updateCustomer(c.id, c);
+    p.catch(function(){ alert("Kunde inte spara kunden till servern – kontrollera nätverket och ladda om sidan."); });
+  }
+  function removeCustomerRemote(id){ if(API) API.deleteCustomer(id).catch(function(){}); }
   // ---------- kategorier ----------
   function catOf(p){ var r=p&&p.kategori; return (S.catRenames&&S.catRenames[r])||r; }
   function catCounts(){
@@ -59,13 +80,25 @@
   }
 
   // ---------- login ----------
+  // Visa användarnamnsfältet bara i skarp drift (API). I demoläge räcker lösenordet "ultra".
+  if(API){ var uf=$("#user"); if(uf) uf.style.display=""; var lh=$("#loginhint"); if(lh) lh.textContent="Logga in med ditt personliga konto."; }
   $("#loginbtn").addEventListener("click", tryLogin);
   $("#pw").addEventListener("keydown", function(e){ if(e.key==="Enter") tryLogin(); });
+  var uEl=$("#user"); if(uEl) uEl.addEventListener("keydown", function(e){ if(e.key==="Enter") tryLogin(); });
+  function enterApp(){ $("#login").style.display="none"; $("#app").style.display="grid"; route("oversikt"); }
   function tryLogin(){
-    if ($("#pw").value.trim().toLowerCase()==="ultra"){
-      $("#login").style.display="none"; $("#app").style.display="grid";
-      S = load(); route("oversikt");
-    } else { $("#pw").value=""; $("#pw").placeholder="Fel lösenord – prova 'ultra'"; }
+    var btn=$("#loginbtn");
+    if(API){
+      var u=(($("#user")&&$("#user").value)||"").trim(), p=$("#pw").value;
+      if(!u||!p){ $("#pw").placeholder="Fyll i användarnamn och lösenord"; return; }
+      var old=btn.textContent; btn.disabled=true; btn.textContent="Loggar in…";
+      API.login(u,p).then(function(){ S=load(); return loadRemote(); })
+        .then(function(){ btn.disabled=false; btn.textContent=old; enterApp(); })
+        .catch(function(){ btn.disabled=false; btn.textContent=old; $("#pw").value=""; $("#pw").placeholder="Fel användarnamn eller lösenord"; });
+    } else {
+      if ($("#pw").value.trim().toLowerCase()==="ultra"){ S=load(); enterApp(); }
+      else { $("#pw").value=""; $("#pw").placeholder="Fel lösenord – prova 'ultra'"; }
+    }
   }
 
   // ---------- router ----------
@@ -73,8 +106,13 @@
     n.addEventListener("click", function(){ route(n.dataset.view); });
   });
   $("#resetdemo").addEventListener("click", function(){
+    if(API){ // I skarp drift: uppdatera från databasen istället för att återställa demo
+      loadRemote().then(function(){ route(currentView); });
+      return;
+    }
     if(confirm("Återställ all demodata?")){ localStorage.removeItem(KEY); S=load(); route("oversikt"); }
   });
+  if(API){ var rd=$("#resetdemo"); if(rd) rd.textContent="↻ Uppdatera från servern"; }
 
   var TITLES={oversikt:["Översikt","Nyckeltal, försäljning och besökare"],uppgifter:["Uppgifter","Ordrar att skicka och att fakturera"],ordrar:["Beställningar","Hantera ordrar och skapa packsedel/faktura"],
     kunder:["Kunder","Företagskunder, kreditgräns och villkor"],produkter:["Produkter","Katalog, priser och lager"],
@@ -171,7 +209,7 @@
     var flow={"Ny":"Plockad","Plockad":"Skickad"};
     var nxt=flow[o.status];
     if(!nxt){ openOrder(o.id); return; }
-    o.status=nxt; save();
+    o.status=nxt; save(); persistOrder(o);
     if(nxt==="Plockad") pdfDoc(o, orderCust(o), "Packsedel");        // skriv ut packsedel vid plock
     vUppgifter();                                                    // stanna kvar & uppdatera listan
   }
@@ -186,9 +224,9 @@
     return t;
   }
   // Markera en order som fakturerad (fakturan skapas manuellt i Fortnox)
-  function markFakturerad(o){ o.status="Fakturerad"; markInvoiced(o); save(); vUppgifter(); }
+  function markFakturerad(o){ o.status="Fakturerad"; markInvoiced(o); save(); persistOrder(o); vUppgifter(); }
   // Ångra fakturering – tillbaka till Skickad (om man klickat fel)
-  function undoFakturerad(o){ o.status="Skickad"; o.faktura=null; o.betald=false; save(); vUppgifter(); }
+  function undoFakturerad(o){ o.status="Skickad"; o.faktura=null; o.betald=false; save(); persistOrder(o); vUppgifter(); }
 
   function vUppgifter(){
     var ship=shipTasks(), inv=invoiceTasks(), done=invoicedTasks();
@@ -349,13 +387,13 @@
     );
 
     // Godkännande-flöde
-    var ap=$("#mApprove"); if(ap) ap.addEventListener("click",function(){ o.godkand=true; save(); closeModal(); refresh(); });
+    var ap=$("#mApprove"); if(ap) ap.addEventListener("click",function(){ o.godkand=true; save(); persistOrder(o); closeModal(); refresh(); });
     var aps=$("#mApproveSave"); if(aps) aps.addEventListener("click",function(){ approveAndSaveCustomer(o); });
-    var dn=$("#mDeny"); if(dn) dn.addEventListener("click",function(){ if(confirm("Neka ordern?")){ o.nekad=true; save(); closeModal(); refresh(); } });
-    var ro=$("#mReopen"); if(ro) ro.addEventListener("click",function(){ o.nekad=false; save(); closeModal(); openOrder(id); });
+    var dn=$("#mDeny"); if(dn) dn.addEventListener("click",function(){ if(confirm("Neka ordern?")){ o.nekad=true; save(); persistOrder(o); closeModal(); refresh(); } });
+    var ro=$("#mReopen"); if(ro) ro.addEventListener("click",function(){ o.nekad=false; save(); persistOrder(o); closeModal(); openOrder(id); });
 
     document.querySelectorAll("#modal [data-go]").forEach(function(a){ a.addEventListener("click",function(){ var op=a.dataset.opt?JSON.parse(a.dataset.opt):null; closeModal(); route(a.dataset.go,op); }); });
-    var so=$("#mSaveOrder"); if(so) so.addEventListener("click",function(){ var ns=$("#ostatus").value; if(ns==="Fakturerad"&&!guardCredit())return; o.status=ns; if(o.status==="Fakturerad"&&!o.faktura) markInvoiced(o); save(); closeModal(); refresh(); });
+    var so=$("#mSaveOrder"); if(so) so.addEventListener("click",function(){ var ns=$("#ostatus").value; if(ns==="Fakturerad"&&!guardCredit())return; o.status=ns; if(o.status==="Fakturerad"&&!o.faktura) markInvoiced(o); save(); persistOrder(o); closeModal(); refresh(); });
     var pk=$("#mPacksedel"); if(pk) pk.addEventListener("click",function(){ pdfDoc(o,c,"Packsedel"); });
     var nb=$("#mNext");
     if(nb) nb.addEventListener("click",function(){
@@ -363,8 +401,8 @@
       var flow={"Ny":"Plockad","Plockad":"Skickad","Skickad":"Fakturerad"};
       var nxt=flow[o.status];
       o.status=nxt;
-      if(nxt==="Fakturerad"){ markInvoiced(o); save(); closeModal(); refresh(); return; } // fakturan skapas manuellt i Fortnox
-      save(); if(nxt==="Plockad") pdfDoc(o,c,"Packsedel"); closeModal(); refresh();
+      if(nxt==="Fakturerad"){ markInvoiced(o); save(); persistOrder(o); closeModal(); refresh(); return; } // fakturan skapas manuellt i Fortnox
+      save(); persistOrder(o); if(nxt==="Plockad") pdfDoc(o,c,"Packsedel"); closeModal(); refresh();
     });
   }
   function plusDays(n){ var d=new Date(); d.setDate(d.getDate()+(+n||0)); return d.toISOString().slice(0,10); }
@@ -375,11 +413,13 @@
     var info=o.kundinfo||{};
     var maxn=S.customers.reduce(function(m,c){var n=parseInt(String(c.id).replace(/\D/g,""),10)||0;return n>m?n:m;},1000);
     var id="K-"+(maxn+1);
-    S.customers.push({ id:id, foretag:info.foretag||"", orgnr:info.orgnr||"", kontakt:info.kontakt||"",
+    var nyKund={ id:id, foretag:info.foretag||"", orgnr:info.orgnr||"", kontakt:info.kontakt||"",
       epost:info.epost||"", tel:info.tel||"", adress:info.adress||"",
-      betaldagar:(S.settings&&typeof S.settings.betaldagar==="number")?S.settings.betaldagar:30, kreditgrans:0, status:"aktiv",
-      noter:"Skapad vid godkännande av order "+o.id, skapad:new Date().toISOString().slice(0,10) });
+      betaldagar:(S.settings&&typeof S.settings.betaldagar==="number")?S.settings.betaldagar:30, kreditgrans:0, rabatt:0, status:"aktiv",
+      noter:"Skapad vid godkännande av order "+o.id, skapad:new Date().toISOString().slice(0,10) };
+    S.customers.push(nyKund);
     o.kundId=id; o.godkand=true; o.ny_kund=false; save();
+    persistCustomer(nyKund, true); persistOrder(o);
     closeModal(); alert("Kunden \""+(info.foretag||"")+"\" är sparad under Kunder och ordern är godkänd."); refresh();
   }
 
@@ -478,9 +518,9 @@
       if($("#f_kredit")) c.kreditgrans=+$("#f_kredit").value||0;
       if($("#f_rabatt")) c.rabatt=Math.max(0,Math.min(100,+$("#f_rabatt").value||0));
       c.status=$("#f_status").value; c.noter=$("#f_noter").value;
-      if(!id) S.customers.push(c); save(); closeModal(); route("kunder");
+      if(!id) S.customers.push(c); save(); persistCustomer(c, !id); closeModal(); route("kunder");
     });
-    if(id){ $("#delCust").addEventListener("click",function(){ if(confirm("Ta bort kunden?")){ S.customers=S.customers.filter(function(x){return x.id!==id;}); save(); closeModal(); route("kunder"); } }); }
+    if(id){ $("#delCust").addEventListener("click",function(){ if(confirm("Ta bort kunden?")){ S.customers=S.customers.filter(function(x){return x.id!==id;}); save(); removeCustomerRemote(id); closeModal(); route("kunder"); } }); }
   }
 
   // ---------- PRODUKTER ----------
@@ -787,9 +827,40 @@
       field("paidStatus-URL (betald-synk)","fx_paid",fx.paidEndpoint||"")+
       '<div class="row">'+field("Funktionsnyckel","fx_nyckel",fx.nyckel||"")+field("Delad hemlighet","fx_secret",fx.secret||"")+'</div>'+
       '<div class="modal-actions"><button class="btn primary" id="saveFx">Spara koppling</button></div></div>'
+      :'')+
+      (API?'<div class="panel" style="max-width:640px"><h3>Personalkonton</h3>'+
+        '<p class="mini" style="margin-bottom:12px">Konton som kan logga in i adminportalen. Ändringar sparas i databasen.</p>'+
+        '<div id="usersList"><p class="mini">Laddar…</p></div>'+
+        '<div class="row" style="margin-top:12px;align-items:flex-end">'+
+          '<div class="field"><label>Användarnamn</label><input id="u_name"></div>'+
+          '<div class="field"><label>Namn</label><input id="u_full"></div>'+
+        '</div>'+
+        '<div class="row" style="align-items:flex-end">'+
+          '<div class="field"><label>Lösenord</label><input id="u_pw" type="password"></div>'+
+          '<div class="field"><label>Roll</label><select id="u_role"><option value="personal">Personal</option><option value="admin">Admin</option></select></div>'+
+          '<div class="field"><button class="btn primary" id="addUser" style="margin-bottom:2px">+ Lägg till</button></div>'+
+        '</div></div>'
       :'');
     $("#saveSet").addEventListener("click",function(){ s.foretag=$("#s_foretag").value;s.orgnr=$("#s_orgnr").value;s.adress=$("#s_adress").value;s.epost=$("#s_epost").value;s.tel=$("#s_tel").value;s.moms=+$("#s_moms").value||25;s.betaldagar=+$("#s_villkor").value||0; save(); alert("Sparat."); });
     if($("#saveFx")) $("#saveFx").addEventListener("click",function(){ fx.endpoint=$("#fx_endpoint").value.trim();fx.paidEndpoint=$("#fx_paid").value.trim();fx.nyckel=$("#fx_nyckel").value.trim();fx.secret=$("#fx_secret").value.trim(); save(); route("installningar"); });
+    if(API){
+      var renderUsers=function(){
+        API.listUsers().then(function(list){
+          $("#usersList").innerHTML='<table class="tbl"><thead><tr><th>Användarnamn</th><th>Namn</th><th>Roll</th><th></th></tr></thead><tbody>'+
+            list.map(function(u){return '<tr><td><b>'+esc(u.username)+'</b></td><td>'+esc(u.name||"")+'</td><td>'+esc(u.role||"personal")+'</td>'+
+              '<td class="num"><button class="btn sm" data-deluser="'+esc(u.username)+'">Ta bort</button></td></tr>';}).join('')+'</tbody></table>';
+          document.querySelectorAll("[data-deluser]").forEach(function(b){ b.addEventListener("click",function(){ if(confirm("Ta bort kontot "+b.dataset.deluser+"?")) API.deleteUser(b.dataset.deluser).then(renderUsers).catch(function(e){alert(e.message||"Kunde inte ta bort.");}); }); });
+        }).catch(function(){ $("#usersList").innerHTML='<p class="mini">Kunde inte hämta konton (kräver admin-roll).</p>'; });
+      };
+      renderUsers();
+      $("#addUser").addEventListener("click",function(){
+        var u=$("#u_name").value.trim(), pw=$("#u_pw").value;
+        if(!u||!pw){ alert("Fyll i användarnamn och lösenord."); return; }
+        API.createUser({username:u, password:pw, name:$("#u_full").value.trim()||u, role:$("#u_role").value})
+          .then(function(){ $("#u_name").value="";$("#u_full").value="";$("#u_pw").value=""; renderUsers(); })
+          .catch(function(e){ alert(e.message||"Kunde inte skapa kontot (kräver admin-roll)."); });
+      });
+    }
   }
   function field(l,id,v){ return '<div class="field"><label>'+l+'</label><input id="'+id+'" value="'+esc(v)+'"></div>'; }
 

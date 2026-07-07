@@ -15,9 +15,10 @@
     <div class="login-card">
       <img src="css/logo.svg" alt="Ultra Motors" />
       <h3 style="margin-bottom:14px">Adminportal</h3>
+      <input type="text" id="user" placeholder="Användarnamn" style="display:none" />
       <input type="password" id="pw" placeholder="Lösenord" />
       <button class="btn primary" style="width:100%" id="loginbtn">Logga in</button>
-      <div class="hint">Demo-lösenord: <b>ultra</b><br>(riktig inloggning kopplas på med backend)</div>
+      <div class="hint" id="loginhint">Demo-lösenord: <b>ultra</b><br>(riktig inloggning kopplas på med backend)</div>
     </div>
   </div>
 
@@ -51,6 +52,8 @@
   <!-- Modal -->
   <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
 
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/products.js"></script>
   <script src="js/admin-data.js"></script>
   <script src="js/flags.js"></script>

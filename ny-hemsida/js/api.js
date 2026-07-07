@@ -46,6 +46,7 @@
     listCustomers: function () { return req("GET", "/customers", null, true).then(function (r) { return r.customers || []; }); },
     createCustomer: function (c) { return req("POST", "/customers", c, true).then(function (r) { return r.customer; }); },
     updateCustomer: function (id, changes) { return req("PATCH", "/customers/" + encodeURIComponent(id), changes, true).then(function (r) { return r.customer; }); },
+    deleteCustomer: function (id) { return req("DELETE", "/customers/" + encodeURIComponent(id), null, true); },
 
     // Personalkonton (admin)
     listUsers: function () { return req("GET", "/users", null, true).then(function (r) { return r.users || []; }); },
