@@ -65,8 +65,8 @@
 
   // ---- Steg 1: välj tillverkare ----
   var MFR = [
-    { id: "ARP", logo: "img/ARP-e1539076860624.jpg", desc: "Bultar och pinnbultar – topplock, vevstake, ramlager, svänghjul och remskiva." },
-    { id: "ACL", logo: "img/acl200-1-e1540197541830.jpg", desc: "Motorlager för de flesta tillämpningar." }
+    { id: "ARP", logo: "img/logo-arp.svg", desc: "Bultar och pinnbultar – topplock, vevstake, ramlager, svänghjul och remskiva." },
+    { id: "ACL", logo: "img/logo-acl.png", desc: "Motorlager för de flesta tillämpningar." }
   ];
   // Rensar bort kortkoderna VL/RL/AL ur beskrivningen (kategorin visar redan typen)
   function cleanDesc(s) { return String(s || "").replace(/\b(?:VL|RL|AL)\b/g, "").replace(/\s{2,}/g, " ").trim(); }
