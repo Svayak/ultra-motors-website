@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kontakt – Ultra Motors AB</title>
+  <meta name="description" content="Kontakta Ultra Motors AB i Södertälje. Adress, öppettider, telefon och e-post – samt kontaktformulär." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+  <link rel="alternate icon" href="favicon.ico" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container nav">
+      <a href="index.html" class="brand"><img src="css/logo.svg" alt="Ultra Motors AB" class="brand-logo" /></a>
+      <nav>
+        <button class="nav-toggle" aria-label="Meny"><span></span><span></span><span></span></button>
+        <ul class="nav-links">
+          <li><a href="index.html">Hem</a></li>
+          <li><a href="om-ultra.html">Om Ultra</a></li>
+          <li><a href="produkter.html">Produkter</a></li>
+          <li><a href="bestall.html">Beställ</a></li>
+          <li><a href="prislistor.html">Prislistor</a></li>
+          <li><a href="kontakt.html" class="active">Kontakt</a></li>
+          <li class="nav-cta"><a href="kontakt.html" class="btn btn--yellow">Begär offert</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="page-hero">
+    <div class="container">
+      <div class="breadcrumb"><a href="index.html">Hem</a> / Kontakt</div>
+      <h1>Kontakta oss</h1>
+      <p>Skicka gärna e-post med dina frågor – vi svarar så fort vi kan.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container contact-grid">
+      <div>
+        <div class="info-block">
+          <h4>Postadress</h4>
+          <p>Ultra Motors AB<br>Box 19049<br>152 25 Södertälje</p>
+        </div>
+        <div class="info-block">
+          <h4>Besöks- / leveransadress</h4>
+          <p>Bovallsvägen 3<br>152 42 Södertälje</p>
+        </div>
+        <div class="info-block">
+          <h4>Öppettider</h4>
+          <p>Måndag–fredag 8–17<br>Lunchstängt ca 12.30–13.30</p>
+        </div>
+        <div class="info-block">
+          <h4>Telefon</h4>
+          <p><a href="tel:+4685509465">08-550 946 55</a></p>
+        </div>
+        <div class="info-block">
+          <h4>E-post</h4>
+          <p><a href="mailto:info@ultramotors.se">info@ultramotors.se</a></p>
+        </div>
+        <p style="font-size:.95rem">Om ditt ärende kräver ett snabbt svar, ring gärna eller lämna ditt telefonnummer via e-post så försöker vi ringa upp så fort vi kan.</p>
+      </div>
+
+      <div>
+        <div class="card">
+          <h3 style="margin-bottom:18px">Skicka ett meddelande</h3>
+          <form id="kontaktform">
+            <div class="form-field">
+              <label for="namn">Namn</label>
+              <input type="text" id="namn" name="namn" required />
+            </div>
+            <div class="form-field">
+              <label for="epost">E-post</label>
+              <input type="email" id="epost" name="epost" required />
+            </div>
+            <div class="form-field">
+              <label for="tel">Telefon</label>
+              <input type="tel" id="tel" name="tel" />
+            </div>
+            <div class="form-field">
+              <label for="meddelande">Meddelande</label>
+              <textarea id="meddelande" name="meddelande" rows="5" required></textarea>
+            </div>
+            <button type="submit" class="btn btn--primary" style="width:100%">Skicka</button>
+            <p class="form-status" style="margin-top:12px;font-size:.9rem;color:var(--color-accent)"></p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--alt" style="padding-top:0">
+    <div class="container">
+      <iframe class="map-embed" loading="lazy" allowfullscreen
+        src="https://www.google.com/maps?q=Bovallsv%C3%A4gen%203,%20152%2042%20S%C3%B6dert%C3%A4lje&output=embed"></iframe>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="index.html" class="brand"><img src="css/logo.svg" alt="Ultra Motors AB" class="brand-logo" /></a>
+          <p>Högteknologisk motorteknisk verkstad i Södertälje. Motorrenovering, motorbyggen och försäljning av motorkomponenter sedan 1980-talet.</p>
+        </div>
+        <div>
+          <h4>Sidor</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Hem</a></li>
+            <li><a href="om-ultra.html">Om Ultra</a></li>
+            <li><a href="produkter.html">Produkter</a></li>
+            <li><a href="prislistor.html">Prislistor</a></li>
+            <li><a href="kontakt.html">Kontakt</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Kontakt</h4>
+          <ul class="footer-links">
+            <li>Bovallsvägen 3</li>
+            <li>152 42 Södertälje</li>
+            <li><a href="tel:+4685509465">08-550 946 55</a></li>
+            <li><a href="mailto:info@ultramotors.se">info@ultramotors.se</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Ultra Motors AB</span>
+        <span>Bovallsvägen 3 · 152 42 Södertälje</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

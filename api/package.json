@@ -1,0 +1,14 @@
+{
+  "name": "ultra-motors-api",
+  "version": "1.0.0",
+  "description": "Ultra Motors backend – Azure Functions (orders, customers, auth) på Azure Table Storage.",
+  "main": "src/functions/*.js",
+  "scripts": {
+    "start": "func start",
+    "seed": "node scripts/seed-admin.js"
+  },
+  "dependencies": {
+    "@azure/data-tables": "^13.2.2",
+    "@azure/functions": "^4.5.0"
+  }
+}

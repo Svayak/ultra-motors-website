@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Beställ – Ultra Motors AB</title>
+  <meta name="description" content="Beställ motorkomponenter från Ultra Motors – ACL-lager, ARP-bultar, kolvringar med mera. Välj produkter, lägg i varukorg och checka ut." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+  <link rel="alternate icon" href="favicon.ico" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container nav">
+      <a href="index.html" class="brand"><img src="css/logo.svg" alt="Ultra Motors AB" class="brand-logo" /></a>
+      <nav>
+        <button class="nav-toggle" aria-label="Meny"><span></span><span></span><span></span></button>
+        <ul class="nav-links">
+          <li><a href="index.html">Hem</a></li>
+          <li><a href="om-ultra.html">Om Ultra</a></li>
+          <li><a href="produkter.html">Produkter</a></li>
+          <li><a href="bestall.html" class="active">Beställ</a></li>
+          <li><a href="prislistor.html">Prislistor</a></li>
+          <li><a href="kontakt.html">Kontakt</a></li>
+          <li class="nav-cta"><a href="konto.html" class="btn btn--yellow">Ansök om konto</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="page-hero">
+    <div class="container">
+      <div class="breadcrumb"><a href="index.html">Hem</a> / Beställ</div>
+      <h1>Beställ motorkomponenter</h1>
+      <p>Sök fram produkten, lägg i varukorgen och skicka din beställning. Företag kan välja faktura.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:48px">
+    <div class="container">
+      <div class="note" style="margin-bottom:26px">
+        Obs: priserna är preliminära och uppdateras löpande. Slutpris bekräftas i orderbekräftelsen.
+      </div>
+
+      <div class="shop">
+        <!-- KATALOG -->
+        <div class="shop-main">
+          <!-- Steg 1: välj tillverkare -->
+          <div id="mfr-pick"></div>
+
+          <!-- Steg 2: produkter för vald tillverkare -->
+          <div id="shop-ui" style="display:none">
+            <div class="shop-mfr-bar">
+              <button class="btn btn--ghost" id="mfr-back" style="border-color:var(--color-border);color:var(--color-text);padding:8px 16px">‹ Byt tillverkare</button>
+              <span id="mfr-current" style="font-weight:800"></span>
+            </div>
+            <div class="shop-tools">
+              <input type="search" id="search" class="shop-search" placeholder="Sök artikelnummer, modell eller märke…" />
+              <select id="brand" class="shop-select"><option value="">Visa alla bilmärken</option></select>
+              <label class="shop-toggle" for="special"><input type="checkbox" id="special" /> <span>Specialsatser</span> <span class="shop-toggle-hint">art.nr med U</span></label>
+            </div>
+            <div class="chips" id="chips"></div>
+            <div class="shop-count" id="count"></div>
+            <div class="prod-list" id="list"></div>
+          </div>
+        </div>
+
+        <!-- VARUKORG -->
+        <aside class="cart">
+          <h3>Varukorg</h3>
+          <div id="cart-body">
+            <p class="cart-empty">Din varukorg är tom. Lägg till produkter från listan.</p>
+          </div>
+        </aside>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="index.html" class="brand"><img src="css/logo.svg" alt="Ultra Motors AB" class="brand-logo" /></a>
+          <p>Högteknologisk motorteknisk verkstad i Södertälje. Motorrenovering, motorbyggen och försäljning av motorkomponenter sedan 1980-talet.</p>
+        </div>
+        <div>
+          <h4>Sidor</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Hem</a></li>
+            <li><a href="om-ultra.html">Om Ultra</a></li>
+            <li><a href="produkter.html">Produkter</a></li>
+            <li><a href="bestall.html">Beställ</a></li>
+            <li><a href="prislistor.html">Prislistor</a></li>
+            <li><a href="kontakt.html">Kontakt</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Kontakt</h4>
+          <ul class="footer-links">
+            <li>Bovallsvägen 3</li>
+            <li>152 42 Södertälje</li>
+            <li><a href="tel:+4685509465">08-550 946 55</a></li>
+            <li><a href="mailto:info@ultramotors.se">info@ultramotors.se</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Ultra Motors AB</span>
+        <span>Bovallsvägen 3 · 152 42 Södertälje</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/flags.js"></script>
+  <script src="js/track.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/products.js"></script>
+  <script src="js/shop.js"></script>
+</body>
+</html>

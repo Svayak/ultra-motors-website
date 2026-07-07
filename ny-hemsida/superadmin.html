@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Superadmin – Ultra Motors AB</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/admin.css" />
+  <link rel="stylesheet" href="css/superadmin.css" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+</head>
+<body class="sa-body">
+
+  <!-- LOGIN (utvecklarkod) -->
+  <div class="login-overlay" id="salogin">
+    <div class="login-card">
+      <img src="css/logo.svg" alt="Ultra Motors" />
+      <div class="sa-badge">SUPERADMIN</div>
+      <h3 style="margin:10px 0 14px">Utvecklarpanel</h3>
+      <input type="password" id="sapw" placeholder="Utvecklarkod" />
+      <button class="btn primary" style="width:100%" id="saloginbtn">Logga in</button>
+      <div class="hint">Demo-kod: <b>ultra-dev</b><br>(separat från vanliga admin)</div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div class="sa-app" id="saapp" style="display:none">
+    <header class="sa-top">
+      <div class="sa-title"><span class="mk">UM</span> Ultra Motors · <b>Superadmin</b></div>
+      <nav class="sa-tabs" id="satabs">
+        <button class="sa-tab active" data-tab="funktioner">Funktioner</button>
+        <button class="sa-tab" data-tab="statistik">Statistik</button>
+        <button class="sa-tab" data-tab="analys">Analys</button>
+        <button class="sa-tab" data-tab="data">Data &amp; underhåll</button>
+        <button class="sa-tab" data-tab="konfig">Konfiguration</button>
+      </nav>
+      <div class="sa-links">
+        <a href="admin.html">Admin</a>
+        <a href="index.html">Hemsidan</a>
+      </div>
+    </header>
+    <main class="sa-main" id="saview"></main>
+  </div>
+
+  <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+
+  <script src="js/products.js"></script>
+  <script src="js/admin-data.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/flags.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="js/superadmin.js"></script>
+</body>
+</html>

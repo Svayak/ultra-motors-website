@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Grafisk profil – Ultra Motors AB</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Lato:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --blue:#1E36B4; --blue-dark:#16298A; --yellow:#F4DE2B;
+    --ink:#14181D; --muted:#5C6672; --surface:#F4F6F8; --border:#E2E6EA;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Inter",sans-serif;color:var(--ink);background:#fff;line-height:1.6}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 32px}
+  header.cover{background:var(--ink);color:#fff;padding:80px 0 70px}
+  header.cover .kicker{color:var(--yellow);font-weight:700;letter-spacing:.18em;text-transform:uppercase;font-size:.8rem}
+  header.cover h1{font-size:clamp(2.4rem,6vw,4rem);font-weight:900;letter-spacing:-.03em;margin:14px 0 10px}
+  header.cover p{color:rgba(255,255,255,.7);max-width:60ch}
+  section{padding:66px 0;border-bottom:1px solid var(--border)}
+  .sec-label{font-size:.78rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
+  h2{font-size:2rem;font-weight:800;letter-spacing:-.02em;margin:10px 0 8px}
+  .sub{color:var(--muted);max-width:64ch;margin-bottom:36px}
+  h3{font-size:1.05rem;font-weight:700;margin-bottom:14px}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+  .panel{border:1px solid var(--border);border-radius:16px;overflow:hidden}
+  .panel .head{padding:12px 20px;font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+  .panel .head.old{background:#EAEAEA;color:#5A5D60}
+  .panel .head.new{background:var(--blue);color:#fff}
+  .panel .body{padding:28px 24px;display:flex;align-items:center;justify-content:center;min-height:150px}
+  /* original logo re-creation */
+  .oldlogo{background:#141414;padding:24px 30px;border-radius:6px}
+  .oldlogo .plate{background:#F4E01F;border:4px solid #2323CC;border-radius:8px;padding:8px 22px;display:inline-block;
+    box-shadow:0 0 14px rgba(60,80,255,.6)}
+  .oldlogo .plate b{font-family:"Arial Black",Arial,sans-serif;font-weight:900;font-size:1.9rem;color:#2323CC;letter-spacing:1px;
+    text-shadow:1px 1px 0 rgba(0,0,0,.25)}
+  .swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+  .sw{border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  .sw .chip{height:88px}
+  .sw .meta{padding:10px 12px}
+  .sw .name{font-weight:700;font-size:.9rem}
+  .sw .hex{font-family:monospace;font-size:.82rem;color:var(--muted)}
+  .sw .role{font-size:.78rem;color:var(--muted);margin-top:2px}
+  .type-spec{border:1px solid var(--border);border-radius:16px;padding:28px 30px;margin-bottom:20px}
+  .type-spec .tag{font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:6px}
+  .scale > div{border-bottom:1px solid var(--border);padding:14px 0;display:flex;align-items:baseline;gap:18px}
+  .scale > div:last-child{border-bottom:0}
+  .scale .lbl{font-size:.78rem;color:var(--muted);font-family:monospace;min-width:120px}
+  .btns{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:13px 26px;border-radius:999px;font-weight:700;font-size:.95rem;border:2px solid transparent;cursor:pointer}
+  .btn.primary{background:var(--blue);color:#fff}
+  .btn.primary:hover{background:var(--blue-dark)}
+  .btn.yellow{background:var(--yellow);color:var(--blue-dark)}
+  .btn.ghost{border-color:var(--ink);color:var(--ink);background:transparent}
+  .btn.dark{background:var(--ink);color:#fff}
+  .card-demo{border:1px solid var(--border);border-radius:16px;padding:26px;box-shadow:0 8px 24px rgba(20,24,29,.08);max-width:320px}
+  .card-demo .ic{width:52px;height:52px;border-radius:12px;background:#E8ECFB;color:var(--blue);display:grid;place-items:center;margin-bottom:16px;font-size:1.4rem;font-weight:900}
+  .principles{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+  .pr{border:1px solid var(--border);border-radius:14px;padding:22px}
+  .pr .n{width:30px;height:30px;border-radius:8px;background:var(--blue);color:#fff;display:grid;place-items:center;font-weight:800;margin-bottom:12px}
+  .do{color:#1a7a4a;font-weight:700}
+  .dont{color:#b3161c;font-weight:700}
+  .foot{background:var(--ink);color:rgba(255,255,255,.6);padding:34px 0;font-size:.85rem}
+  @media(max-width:720px){.cols{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="cover">
+  <div class="wrap">
+    <div class="kicker">Grafisk profil</div>
+    <h1>Ultra Motors AB</h1>
+    <p>Från den blå-gula skyltidentiteten till ett renare, modernt uttryck. Den här profilen visar var vi kommer ifrån och vart vi är på väg – logotyp, färger, typografi och grundläggande komponenter.</p>
+  </div>
+</header>
+
+<!-- LOGGA -->
+<section>
+  <div class="wrap">
+    <div class="sec-label">01 · Logotyp</div>
+    <h2>Från skylt till vektor</h2>
+    <p class="sub">Kärnan behålls – den gula skylten med blå text i registreringsskylt-anda. Vi tar bort glöd, 3D-bevel och dubbelram och ritar om den som ren vektor för knivskärpa i alla storlekar.</p>
+    <div class="cols">
+      <div class="panel">
+        <div class="head old">Original</div>
+        <div class="body">
+          <div class="oldlogo"><span class="plate"><b>ULTRA MOTORS</b></span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="head new">Moderniserad</div>
+        <div class="body">
+          <svg width="290" viewBox="0 0 264 52" role="img" aria-label="Ultra Motors">
+            <rect x="3" y="3" width="258" height="46" rx="9" fill="#F4DE2B"/>
+            <rect x="3" y="3" width="258" height="46" rx="9" fill="none" stroke="#1E36B4" stroke-width="3"/>
+            <text x="132" y="36" text-anchor="middle" font-family="Inter,sans-serif" font-weight="900" font-size="27" letter-spacing="1" fill="#1E36B4">ULTRA MOTORS</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FÄRGER -->
+<section>
+  <div class="wrap">
+    <div class="sec-label">02 · Färger</div>
+    <h2>Färgpalett</h2>
+    <p class="sub">Originalet blandade en klarblå länkfärg med den djupblå/gula loggan mot ljusgrått. Den nya paletten renodlar arvet: en djup, trygg blå som primärfärg, den gula som sparsam accent, och neutrala gråtoner för luft och struktur.</p>
+
+    <h3>Original</h3>
+    <div class="swatches" style="margin-bottom:38px">
+      <div class="sw"><div class="chip" style="background:#0896FE"></div><div class="meta"><div class="name">Länkblå</div><div class="hex">#0896FE</div><div class="role">Länkar & meny</div></div></div>
+      <div class="sw"><div class="chip" style="background:#1E36B4"></div><div class="meta"><div class="name">Logga blå</div><div class="hex">#1E36B4</div><div class="role">Skylttext & ram</div></div></div>
+      <div class="sw"><div class="chip" style="background:#F4E01F"></div><div class="meta"><div class="name">Logga gul</div><div class="hex">#F4E01F</div><div class="role">Skyltplatta</div></div></div>
+      <div class="sw"><div class="chip" style="background:#313539"></div><div class="meta"><div class="name">Rubrikgrå</div><div class="hex">#313539</div><div class="role">Rubriker</div></div></div>
+      <div class="sw"><div class="chip" style="background:#5A5D60"></div><div class="meta"><div class="name">Brödtext</div><div class="hex">#5A5D60</div><div class="role">Löptext</div></div></div>
+      <div class="sw"><div class="chip" style="background:#EAEAEA"></div><div class="meta"><div class="name">Bakgrund</div><div class="hex">#EAEAEA</div><div class="role">Sidbakgrund</div></div></div>
+    </div>
+
+    <h3>Moderniserad palett</h3>
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:#1E36B4"></div><div class="meta"><div class="name">Ultra-blå</div><div class="hex">#1E36B4</div><div class="role">Primär / knappar</div></div></div>
+      <div class="sw"><div class="chip" style="background:#16298A"></div><div class="meta"><div class="name">Djupblå</div><div class="hex">#16298A</div><div class="role">Hover & djup</div></div></div>
+      <div class="sw"><div class="chip" style="background:#F4DE2B"></div><div class="meta"><div class="name">Signalgul</div><div class="hex">#F4DE2B</div><div class="role">Accent (sparsam)</div></div></div>
+      <div class="sw"><div class="chip" style="background:#14181D"></div><div class="meta"><div class="name">Antracit</div><div class="hex">#14181D</div><div class="role">Rubriker / footer</div></div></div>
+      <div class="sw"><div class="chip" style="background:#5C6672"></div><div class="meta"><div class="name">Skiffergrå</div><div class="hex">#5C6672</div><div class="role">Brödtext</div></div></div>
+      <div class="sw"><div class="chip" style="background:#F4F6F8"></div><div class="meta"><div class="name">Dimljus</div><div class="hex">#F4F6F8</div><div class="role">Ytor / sektioner</div></div></div>
+      <div class="sw"><div class="chip" style="background:#E2E6EA"></div><div class="meta"><div class="name">Kantgrå</div><div class="hex">#E2E6EA</div><div class="role">Ramar & linjer</div></div></div>
+      <div class="sw"><div class="chip" style="background:#FFFFFF;box-shadow:inset 0 0 0 1px #E2E6EA"></div><div class="meta"><div class="name">Vit</div><div class="hex">#FFFFFF</div><div class="role">Basbakgrund</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TYPOGRAFI -->
+<section>
+  <div class="wrap">
+    <div class="sec-label">03 · Typografi</div>
+    <h2>Typsnitt</h2>
+    <p class="sub">Originalet använde Lato. Vi byter till Inter – ett tydligt, tekniskt och modernt typsnitt som funkar lika bra i stora rubriker som i finstilta specifikationer.</p>
+
+    <div class="cols" style="margin-bottom:28px">
+      <div class="type-spec">
+        <div class="tag">Original</div>
+        <div style="font-family:'Lato',sans-serif">
+          <div style="font-size:2rem;font-weight:700;color:#313539">Lato</div>
+          <div style="color:#5A5D60">Regular 400 · Bold 700</div>
+          <div style="margin-top:10px;color:#5A5D60">Motorbyggen på högsta nivå</div>
+        </div>
+      </div>
+      <div class="type-spec">
+        <div class="tag">Modern</div>
+        <div>
+          <div style="font-size:2rem;font-weight:900;letter-spacing:-.02em">Inter</div>
+          <div style="color:var(--muted)">Regular 400 · Semibold 600 · Black 900</div>
+          <div style="margin-top:10px;color:var(--muted)">Motorbyggen på högsta nivå</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="type-spec">
+      <div class="tag">Skala (Inter)</div>
+      <div class="scale">
+        <div><span class="lbl">H1 · 900 · 56px</span><span style="font-size:44px;font-weight:900;letter-spacing:-.03em">Ultra Motors</span></div>
+        <div><span class="lbl">H2 · 800 · 32px</span><span style="font-size:30px;font-weight:800;letter-spacing:-.02em">Motortjänster</span></div>
+        <div><span class="lbl">H3 · 700 · 20px</span><span style="font-size:20px;font-weight:700">Motorrenovering</span></div>
+        <div><span class="lbl">Brödtext · 400 · 17px</span><span style="font-size:17px;color:var(--muted)">Egen komplett maskinpark för de flesta motorjobb.</span></div>
+        <div><span class="lbl">Etikett · 700 · 13px</span><span style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)">Vad vi gör</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- KOMPONENTER -->
+<section>
+  <div class="wrap">
+    <div class="sec-label">04 · Komponenter</div>
+    <h2>Knappar & kort</h2>
+    <p class="sub">Rundade knappar, mjuka kort med tunn ram och lätt skugga. Blått för primära handlingar, gult som accent, antracit för sekundärt.</p>
+    <h3>Knappar</h3>
+    <div class="btns" style="margin-bottom:36px">
+      <span class="btn primary">Begär offert</span>
+      <span class="btn yellow">Se prislistor</span>
+      <span class="btn dark">Kontakta oss</span>
+      <span class="btn ghost">Läs mer</span>
+    </div>
+    <h3>Kort</h3>
+    <div class="card-demo">
+      <div class="ic">U</div>
+      <div style="font-weight:700;font-size:1.15rem;margin-bottom:6px">Motorrenovering</div>
+      <div style="color:var(--muted);font-size:.97rem">Kompletta jobb med full kontroll på varje delmoment – i egen regi.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ANVÄNDNING -->
+<section>
+  <div class="wrap">
+    <div class="sec-label">05 · Användning</div>
+    <h2>Principer</h2>
+    <p class="sub">Enkla regler som håller uttrycket rent och konsekvent.</p>
+    <div class="principles">
+      <div class="pr"><div class="n">1</div><h3 style="margin-bottom:6px">Blått bär</h3><p style="color:var(--muted);font-size:.95rem">Ultra-blå är huvudfärgen. Använd den för knappar, länkar och accenter.</p></div>
+      <div class="pr"><div class="n">2</div><h3 style="margin-bottom:6px">Gult sparsamt</h3><p style="color:var(--muted);font-size:.95rem">Den gula är en signalfärg – i loggan och enstaka accenter, inte stora ytor.</p></div>
+      <div class="pr"><div class="n">3</div><h3 style="margin-bottom:6px">Luft & vitt</h3><p style="color:var(--muted);font-size:.95rem">Vit bas och gott om luft ger ett modernt, trovärdigt intryck.</p></div>
+      <div class="pr"><div class="n">4</div><h3 style="margin-bottom:6px">Fri yta runt loggan</h3><p style="color:var(--muted);font-size:.95rem">Håll minst en halv skylthöjd fri runt logotypen. Töj eller luta den aldrig.</p></div>
+    </div>
+    <div style="margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div style="border:1px solid var(--border);border-radius:14px;padding:20px"><div class="do">✓ Gör</div><p style="color:var(--muted);font-size:.95rem;margin-top:6px">Använd loggan på vit, ljusgrå eller mörk antracitbakgrund där skylten står ut.</p></div>
+      <div style="border:1px solid var(--border);border-radius:14px;padding:20px"><div class="dont">✕ Undvik</div><p style="color:var(--muted);font-size:.95rem;margin-top:6px">Lägg inte loggan på brokig bild, byt inte färger eller lägg till skuggor/glöd.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="foot">
+  <div class="wrap">Grafisk profil · Ultra Motors AB · Bovallsvägen 3, 152 42 Södertälje · info@ultramotors.se</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+
+    "FORTNOX_CLIENT_ID": "din-client-id-från-developer-portal",
+    "FORTNOX_CLIENT_SECRET": "din-client-secret",
+    "FORTNOX_REDIRECT_URI": "https://<din-funktion>.azurewebsites.net/api/fortnoxAuth",
+
+    "FORTNOX_TOKEN_CONTAINER": "fortnox",
+    "WEBHOOK_SECRET": "valfri-delad-hemlighet-mellan-admin-och-funktion",
+
+    "ALLOWED_ORIGIN": "https://ultramotors.se",
+    "FORTNOX_ONLY_APPROVED": "true",
+    "FORTNOX_APPROVED_ORGNR": "556123-4567,556987-1122"
+  }
+}

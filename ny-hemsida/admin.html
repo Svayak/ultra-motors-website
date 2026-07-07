@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Adminportal – Ultra Motors AB</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/admin.css" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+</head>
+<body>
+
+  <!-- LOGIN (demo) -->
+  <div class="login-overlay" id="login">
+    <div class="login-card">
+      <img src="css/logo.svg" alt="Ultra Motors" />
+      <h3 style="margin-bottom:14px">Adminportal</h3>
+      <input type="password" id="pw" placeholder="Lösenord" />
+      <button class="btn primary" style="width:100%" id="loginbtn">Logga in</button>
+      <div class="hint">Demo-lösenord: <b>ultra</b><br>(riktig inloggning kopplas på med backend)</div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div class="admin" id="app" style="display:none">
+    <aside class="sidebar">
+      <div class="logo"><span class="mk">UM</span> Ultra Admin</div>
+      <div class="navlink active" data-view="oversikt"><span class="ic">▦</span> Översikt</div>
+      <div class="navlink" data-view="uppgifter"><span class="ic">✅</span> Uppgifter</div>
+      <div class="navlink" data-view="ordrar"><span class="ic">🧾</span> Beställningar</div>
+      <div class="navlink" data-view="kunder"><span class="ic">👥</span> Kunder</div>
+      <div class="navlink" data-view="produkter"><span class="ic">📦</span> Produkter</div>
+      <div class="navlink" data-view="installningar"><span class="ic">⚙️</span> Inställningar</div>
+      <div class="sep"></div>
+      <a class="navlink" href="index.html"><span class="ic">↩</span> Till hemsidan</a>
+      <div class="back" id="resetdemo" style="cursor:pointer">↺ Återställ demodata</div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h1 id="title">Översikt</h1>
+          <div class="sub" id="subtitle"></div>
+        </div>
+        <span class="badge-demo">DEMO – lokal data</span>
+      </div>
+      <div id="view"></div>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+
+  <script src="js/products.js"></script>
+  <script src="js/admin-data.js"></script>
+  <script src="js/flags.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

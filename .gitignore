@@ -1,0 +1,13 @@
+# Beroenden
+node_modules/
+api/node_modules/
+
+# Lokala hemligheter (ska INTE checkas in – ligger som app settings i Azure)
+api/local.settings.json
+*.env
+.env
+
+# Bygg-/systemfiler
+.DS_Store
+dist/
+*.log

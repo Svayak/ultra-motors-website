@@ -1,0 +1,13 @@
+{
+  "name": "ultramotors-fortnox",
+  "version": "1.0.0",
+  "description": "Azure Functions som skapar och skickar fakturor i Fortnox från Ultra Motors webborder.",
+  "main": "src/functions/*.js",
+  "scripts": {
+    "start": "func start"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.5.0",
+    "@azure/storage-blob": "^12.17.0"
+  }
+}

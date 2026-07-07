@@ -1,0 +1,11 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "STORAGE_CONNECTION": "UseDevelopmentStorage=true",
+    "AUTH_SECRET": "byt-till-en-lang-slumpmassig-strang",
+    "SETUP_KEY": "valj-en-hemlig-engangsnyckel",
+    "ALLOWED_ORIGIN": "*"
+  }
+}

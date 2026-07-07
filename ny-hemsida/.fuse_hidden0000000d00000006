@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ansök om konto – Ultra Motors AB</title>
+  <meta name="description" content="Ansök om företagskonto hos Ultra Motors för att beställa med faktura. Vi granskar och skapar kontot." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+  <link rel="alternate icon" href="favicon.ico" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container nav">
+      <a href="index.html" class="brand"><img src="css/logo.svg" alt="Ultra Motors AB" class="brand-logo" /></a>
+      <nav>
+        <button class="nav-toggle" aria-label="Meny"><span></span><span></span><span></span></button>
+        <ul class="nav-links">
+          <li><a href="index.html">Hem</a></li>
+          <li><a href="om-ultra.html">Om Ultra</a></li>
+          <li><a href="produkter.html">Produkter</a></li>
+          <li><a href="bestall.html">Beställ</a></li>
+          <li><a href="prislistor.html">Prislistor</a></li>
+          <li><a href="kontakt.html">Kontakt</a></li>
+          <li class="nav-cta"><a href="konto.html" class="btn btn--yellow active">Ansök om konto</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="page-hero">
+    <div class="container">
+      <div class="breadcrumb"><a href="index.html">Hem</a> / Ansök om konto</div>
+      <h1>Ansök om företagskonto</h1>
+      <p>Med ett konto hos oss kan ditt företag beställa mot faktura. Vi granskar ansökan och skapar kontot åt er.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container" style="max-width:720px">
+      <div class="card">
+        <h3 style="margin-bottom:6px">Kontoansökan</h3>
+        <p style="color:var(--color-muted);font-size:.95rem;margin-bottom:20px">Fält märkta med * är obligatoriska. Kontot aktiveras efter att vi granskat uppgifterna.</p>
+        <form id="kontoform">
+          <div class="checkout-grid">
+            <div class="form-field"><label>Företagsnamn *</label><input name="foretag" required></div>
+            <div class="form-field"><label>Organisationsnummer *</label><input name="orgnr" required placeholder="NNNNNN-NNNN"></div>
+            <div class="form-field"><label>Kontaktperson *</label><input name="kontakt" required></div>
+            <div class="form-field"><label>E-post *</label><input type="email" name="epost" required></div>
+            <div class="form-field"><label>Telefon *</label><input name="tel" required></div>
+            <div class="form-field"><label>Momsreg.nr (VAT)</label><input name="vat"></div>
+          </div>
+          <div class="form-field"><label>Faktura-/besöksadress *</label><input name="adress" required></div>
+          <div class="form-field"><label>Fakturamejl (om annan)</label><input type="email" name="fakturamejl"></div>
+          <div class="form-field"><label>Meddelande</label><textarea name="meddelande" rows="3" placeholder="T.ex. vilken typ av produkter ni brukar beställa"></textarea></div>
+          <button type="submit" class="btn btn--primary" style="width:100%">Skicka ansökan</button>
+          <p class="form-status" style="margin-top:12px;font-size:.9rem;color:var(--color-accent)"></p>
+          <p style="font-size:.82rem;color:var(--color-muted);margin-top:8px">När sidan är i drift skickas ansökan till Ultra Motors, som skapar kontot och återkommer med inloggning. Kunder skapar inte konton själva.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="index.html" class="brand"><img src="css/logo.svg" alt="Ultra Motors AB" class="brand-logo" /></a>
+          <p>Högteknologisk motorteknisk verkstad i Södertälje. Motorrenovering, motorbyggen och försäljning av motorkomponenter sedan 1980-talet.</p>
+        </div>
+        <div>
+          <h4>Sidor</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Hem</a></li>
+            <li><a href="om-ultra.html">Om Ultra</a></li>
+            <li><a href="produkter.html">Produkter</a></li>
+            <li><a href="bestall.html">Beställ</a></li>
+            <li><a href="prislistor.html">Prislistor</a></li>
+            <li><a href="kontakt.html">Kontakt</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Kontakt</h4>
+          <ul class="footer-links">
+            <li>Bovallsvägen 3</li>
+            <li>152 42 Södertälje</li>
+            <li><a href="tel:+4685509465">08-550 946 55</a></li>
+            <li><a href="mailto:info@ultramotors.se">info@ultramotors.se</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Ultra Motors AB</span>
+        <span>Bovallsvägen 3 · 152 42 Södertälje</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    document.getElementById("kontoform").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var s = this.querySelector(".form-status");
+      s.textContent = "Tack! Din ansökan är förberedd. Koppla formuläret till er e-post/backend för att skicka den skarpt.";
+      this.reset();
+    });
+  </script>
+</body>
+</html>
