@@ -3881,7 +3881,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Alfa / Fiat",
 "beskrivning": "VL",
 "artikelnr": "4B2824",
@@ -3891,7 +3891,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Ramlager",
 "marke": "Alfa / Fiat",
 "beskrivning": "RL",
 "artikelnr": "5M2826",
@@ -3901,7 +3901,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Axiallager",
 "marke": "Alfa / Fiat",
 "beskrivning": "AL",
 "artikelnr": "2826T",
@@ -3911,7 +3911,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Alfa / Fiat",
 "beskrivning": "VL",
 "artikelnr": "4B1110H",
@@ -3921,7 +3921,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Ramlager",
 "marke": "Alfa / Fiat",
 "beskrivning": "RL",
 "artikelnr": "5M1112H",
@@ -3931,7 +3931,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Audi",
 "beskrivning": "1,8T 20V 2,0 16V VL",
 "artikelnr": "4B1609H",
@@ -3941,7 +3941,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Audi",
 "beskrivning": "5cyl VL",
 "artikelnr": "5B1606H",
@@ -3951,7 +3951,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Audi",
 "beskrivning": "VL",
 "artikelnr": "5B1606",
@@ -3961,7 +3961,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Ramlager",
 "marke": "Audi",
 "beskrivning": "RL med lösa axialbrickor",
 "artikelnr": "6M1604",
@@ -3971,7 +3971,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Ramlager",
 "marke": "Audi",
 "beskrivning": "RL med axiallager",
 "artikelnr": "6M1605",
@@ -3981,7 +3981,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Axiallager",
 "marke": "Audi",
 "beskrivning": "AL",
 "artikelnr": "2T1604",
@@ -3991,7 +3991,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Audi",
 "beskrivning": "V6 3.2-3.6 VL",
 "artikelnr": "6B5530H",
@@ -4001,7 +4001,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Ramlager",
 "marke": "Audi",
 "beskrivning": "V6 3.2-3.6 RL",
 "artikelnr": "7M5532H",
@@ -4011,7 +4011,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Austin / BMC",
 "beskrivning": "VL",
 "artikelnr": "4B2201",
@@ -4021,7 +4021,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Austin / BMC",
 "beskrivning": "VL",
 "artikelnr": "4B2201H",
@@ -4031,7 +4031,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Ramlager",
 "marke": "Austin / BMC",
 "beskrivning": "RL",
 "artikelnr": "3M2203H",
@@ -4041,7 +4041,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Axiallager",
 "marke": "Austin / BMC",
 "beskrivning": "AL",
 "artikelnr": "2T2203",
@@ -4051,7 +4051,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Austin / BMC",
 "beskrivning": "1275 VL",
 "artikelnr": "4B2206H",
@@ -4061,7 +4061,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "BMW",
 "beskrivning": "M10 VL",
 "artikelnr": "4B1486",
@@ -4071,7 +4071,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "BMW",
 "beskrivning": "M10 VL",
 "artikelnr": "4B1486H",
@@ -4081,7 +4081,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Ramlager",
 "marke": "BMW",
 "beskrivning": "M10 RL",
 "artikelnr": "5M1549",
@@ -4091,7 +4091,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "BMW",
 "beskrivning": "M40-42-43 VL",
 "artikelnr": "4B1490",
@@ -4101,7 +4101,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "BMW",
 "beskrivning": "M40-42-43 VL",
 "artikelnr": "4B1490H",
@@ -4111,7 +4111,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "BMW",
 "beskrivning": "Mini W10B16 VL",
 "artikelnr": "4B2903H",
@@ -4121,7 +4121,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "BMW",
 "beskrivning": "Mini W11B16 1,6L S/C VL",
 "artikelnr": "4B2902H",
@@ -4131,7 +4131,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "BMW",
 "beskrivning": "M3 S14 VL",
 "artikelnr": "4B1568",
@@ -4141,7 +4141,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "BMW",
 "beskrivning": "M3 S14 VL",
 "artikelnr": "4B1568H",
@@ -4151,7 +4151,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "BMW",
 "beskrivning": "N20B20 N20B26 VL",
 "artikelnr": "4B1584H",
@@ -4161,7 +4161,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "BMW",
 "beskrivning": "M20 M50 M52 2,0-2,8 VL",
 "artikelnr": "6B1490",
@@ -4171,7 +4171,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "BMW",
 "beskrivning": "M20 M50 M52 2,0-2,8 VL",
 "artikelnr": "6B1490H",
@@ -4181,7 +4181,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "BMW",
 "beskrivning": "M30 3,5L VL",
 "artikelnr": "6B1506",
@@ -4191,7 +4191,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "BMW",
 "beskrivning": "M3 S50B30 3,0L VL",
 "artikelnr": "6B1515H",
@@ -4201,7 +4201,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "BMW",
 "beskrivning": "M3 S50B32 3,2L VL",
 "artikelnr": "6B1497H",
@@ -4211,7 +4211,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "BMW",
 "beskrivning": "S54B32 3,2L VL",
 "artikelnr": "6B1569H",
@@ -4221,7 +4221,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "BMW",
 "beskrivning": "M5 F10 F90 N63B44 VL",
 "artikelnr": "8B1578H",
@@ -4231,7 +4231,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "BMW",
 "beskrivning": "M3 E90 S65B40 VL",
 "artikelnr": "8B1580H",
@@ -4241,7 +4241,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Chevrolet",
 "beskrivning": "Small Block VL",
 "artikelnr": "8B663H",
@@ -4251,7 +4251,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Ramlager",
 "marke": "Chevrolet",
 "beskrivning": "Small Block RL",
 "artikelnr": "5M909H",
@@ -4271,7 +4271,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Chevrolet",
 "beskrivning": "Big Block VL",
 "artikelnr": "8B743H",
@@ -4281,7 +4281,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Ramlager",
 "marke": "Chevrolet",
 "beskrivning": "Big Block RL",
 "artikelnr": "5M829H",
@@ -4291,7 +4291,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Chrysler",
 "beskrivning": "VL",
 "artikelnr": "8B481P",
@@ -4301,7 +4301,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Chrysler",
 "beskrivning": "VL",
 "artikelnr": "8B481H",
@@ -4311,7 +4311,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Chrysler",
 "beskrivning": "345 5,7L Hemi VL",
 "artikelnr": "8B1808H",
@@ -4321,7 +4321,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Ramlager",
 "marke": "Chrysler",
 "beskrivning": "345 5,7L Hemi RL",
 "artikelnr": "5M2220H",
@@ -4331,7 +4331,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Ford",
 "beskrivning": "Kent TC VL",
 "artikelnr": "4B603H",
@@ -4341,7 +4341,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Ramlager",
 "marke": "Ford",
 "beskrivning": "BDA Twincam RL",
 "artikelnr": "5M2152H",
@@ -4351,7 +4351,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Ford",
 "beskrivning": "2,3 Pinto VL",
 "artikelnr": "4B2166H",
@@ -4361,7 +4361,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Ramlager",
 "marke": "Ford",
 "beskrivning": "2,3 Pinto RL",
 "artikelnr": "5M2167H",
@@ -4371,7 +4371,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Ford",
 "beskrivning": "Cosworth YB VL",
 "artikelnr": "4B2280H",
@@ -4381,7 +4381,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Ramlager",
 "marke": "Ford",
 "beskrivning": "Cosworth YB RL",
 "artikelnr": "5M1117H",
@@ -4391,7 +4391,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Ford",
 "beskrivning": "Zetec Duratec 2,0 VL",
 "artikelnr": "4B4390H",
@@ -4401,7 +4401,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Ford",
 "beskrivning": "Duratec 2,3 VL",
 "artikelnr": "4B8170H",
@@ -4411,7 +4411,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Ford",
 "beskrivning": "Ecoboost 1.0 VL",
 "artikelnr": "3B7328H",
@@ -4421,7 +4421,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Ford",
 "beskrivning": "4,6L DOHC VL",
 "artikelnr": "8B1442H",
@@ -4431,7 +4431,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Honda",
 "beskrivning": "D16A1/A6 VL",
 "artikelnr": "4B1925H",
@@ -4441,7 +4441,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Honda",
 "beskrivning": "B18C1 B18C5 VTEC VL",
 "artikelnr": "4B1931",
@@ -4451,7 +4451,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Honda",
 "beskrivning": "F20C1 F22C H22A4 VL",
 "artikelnr": "4B1912H",
@@ -4461,7 +4461,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Honda",
 "beskrivning": "K20A2 K24A VL",
 "artikelnr": "4B1972H",
@@ -4471,7 +4471,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Jaguar",
 "beskrivning": "2.8 3.8 4,2 VL",
 "artikelnr": "6B2991",
@@ -4481,7 +4481,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Lancia",
 "beskrivning": "Delta integrale 2,0 VL",
 "artikelnr": "4B2904H",
@@ -4491,7 +4491,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Ramlager",
 "marke": "Lancia",
 "beskrivning": "Delta integrale 2,0 RL",
 "artikelnr": "5M2908H",
@@ -4501,7 +4501,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Mazda",
 "beskrivning": "VL",
 "artikelnr": "4B8351H",
@@ -4511,7 +4511,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Ramlager",
 "marke": "Mazda",
 "beskrivning": "RL",
 "artikelnr": "5M8353H",
@@ -4521,7 +4521,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Mitsubishi",
 "beskrivning": "4G63 4G63-T 83-92 VL",
 "artikelnr": "4B1146H",
@@ -4531,7 +4531,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Mitsubishi",
 "beskrivning": "4G63 94up VL",
 "artikelnr": "4B1185H",
@@ -4541,7 +4541,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Mitsubishi",
 "beskrivning": "4G91 4G92 4G93 VL",
 "artikelnr": "4B8036H",
@@ -4551,7 +4551,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Nissan",
 "beskrivning": "CA18DET VL",
 "artikelnr": "4B1630H",
@@ -4561,7 +4561,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Nissan",
 "beskrivning": "SR20DET VL",
 "artikelnr": "4B2960H",
@@ -4571,7 +4571,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Nissan",
 "beskrivning": "SR20DET GTiR VL",
 "artikelnr": "4B2976H",
@@ -4581,7 +4581,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Nissan",
 "beskrivning": "RB20DET VL",
 "artikelnr": "6B2630H",
@@ -4591,7 +4591,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Nissan",
 "beskrivning": "RB25DET RB26DET VL",
 "artikelnr": "6B2960H",
@@ -4601,7 +4601,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Ramlager",
 "marke": "Nissan",
 "beskrivning": "RB26DET RL",
 "artikelnr": "7M2428H",
@@ -4611,7 +4611,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Nissan",
 "beskrivning": "VQ35DE VL",
 "artikelnr": "8B2990H",
@@ -4621,7 +4621,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Opel",
 "beskrivning": "VL",
 "artikelnr": "4B1345",
@@ -4631,7 +4631,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Opel",
 "beskrivning": "2,0 16V VL",
 "artikelnr": "4B2322H",
@@ -4641,7 +4641,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Peugeot",
 "beskrivning": "VL",
 "artikelnr": "4B7712H",
@@ -4651,7 +4651,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Porsche",
 "beskrivning": "911 2993-3164cc 78-89 VL",
 "artikelnr": "6B2462H",
@@ -4661,7 +4661,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Porsche",
 "beskrivning": "930 964 993 VL",
 "artikelnr": "6B2463H",
@@ -4671,7 +4671,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Renault",
 "beskrivning": "1,8 2,0 F7P F7R VL",
 "artikelnr": "4B7906H",
@@ -4681,7 +4681,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Renault",
 "beskrivning": "2,0L Clio F4R VL",
 "artikelnr": "4B7820H",
@@ -4691,7 +4691,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "SAAB",
 "beskrivning": "9000 9-3 9-5 VL",
 "artikelnr": "6B1656",
@@ -4701,7 +4701,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Ramlager",
 "marke": "SAAB",
 "beskrivning": "9000 9-3 9-5 RL",
 "artikelnr": "4M1658",
@@ -4711,7 +4711,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Subaru",
 "beskrivning": "EJ VL",
 "artikelnr": "4B8296H",
@@ -4721,7 +4721,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Ramlager",
 "marke": "Subaru",
 "beskrivning": "EJ RL",
 "artikelnr": "5M8297H",
@@ -4731,7 +4731,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Subaru",
 "beskrivning": "BRZ FA20 VL",
 "artikelnr": "4B8310H",
@@ -4741,7 +4741,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Toyota",
 "beskrivning": "4A-GE 4A-GZE VL",
 "artikelnr": "4B1780H",
@@ -4751,7 +4751,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Toyota",
 "beskrivning": "3S-GE 3S-GTE VL",
 "artikelnr": "4B8366H",
@@ -4761,7 +4761,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Toyota",
 "beskrivning": "GT86 Scion FRS VL",
 "artikelnr": "CR4616XPG",
@@ -4771,7 +4771,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Toyota",
 "beskrivning": "Supra 7M-GTE VL",
 "artikelnr": "6B8100H",
@@ -4781,7 +4781,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Toyota",
 "beskrivning": "Supra 2JZ-GTE VL",
 "artikelnr": "6B7990H",
@@ -4791,7 +4791,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Toyota",
 "beskrivning": "1UZFE 2UZFE VL",
 "artikelnr": "8B8091H",
@@ -4801,7 +4801,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "VW",
 "beskrivning": "1,6 VL",
 "artikelnr": "4B1636",
@@ -4811,7 +4811,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "VW",
 "beskrivning": "1,8 2,0T VL",
 "artikelnr": "4B1606H",
@@ -4821,7 +4821,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "VW",
 "beskrivning": "TFSI 2.0 VL",
 "artikelnr": "4B5562H",
@@ -4831,7 +4831,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "VW",
 "beskrivning": "2,8 VR6 VL",
 "artikelnr": "CR6764XP",
@@ -4841,7 +4841,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Volvo",
 "beskrivning": "B18-B20 6bult VL",
 "artikelnr": "4B2741",
@@ -4851,7 +4851,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Volvo",
 "beskrivning": "B20 B23 8bult VL",
 "artikelnr": "4B2740",
@@ -4861,7 +4861,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Ramlager",
 "marke": "Volvo",
 "beskrivning": "B18-B23 RL",
 "artikelnr": "5M2742",
@@ -4871,7 +4871,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Volvo",
 "beskrivning": "B230 VL",
 "artikelnr": "4B2726H",
@@ -4881,7 +4881,7 @@ window.PRODUCTS = [
 "lager": "Beställningsvara"
 },
 {
-"kategori": "Motorlager",
+"kategori": "Vevlager",
 "marke": "Volvo",
 "beskrivning": "850 20V VL",
 "artikelnr": "CR509XP",
