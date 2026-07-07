@@ -9,5 +9,6 @@ api/local.settings.json
 
 # Bygg-/systemfiler
 .DS_Store
+.fuse_hidden*
 dist/
 *.log
