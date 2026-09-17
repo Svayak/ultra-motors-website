@@ -158,6 +158,9 @@
       if (activeSpecial && !isSpecial(p)) return false;
       if (activeCat !== "Alla" && p.kategori !== activeCat) return false;
       if (activeBrand && p._brand !== activeBrand) return false;
+      // Slut hos leverantör-artiklar göms vid vanlig bläddring, men dyker upp om
+      // man aktivt söker (t.ex. på artikelnumret) och träffar dem.
+      if (isOutOfStock(p) && !q) return false;
       if (!q) return true;
       return (p.marke + " " + p.beskrivning + " " + p.artikelnr).toLowerCase().indexOf(q) !== -1;
     });
