@@ -7,10 +7,17 @@ const { json, preflight, readBody } = require("../http");
 function orderNo() { return "UM-" + new Date().getFullYear() + "-" + String(Date.now()).slice(-6); }
 function clip(s, n) { return String(s == null ? "" : s).slice(0, n); }
 
-// Server-sidans priskatalog (autogenererad från produkter.xlsx). Priser sätts HÄR,
-// inte utifrån vad klienten skickar.
-let CATALOG = null;
-function catalog() { if (!CATALOG) { try { CATALOG = require("../../data/catalog.json"); } catch (e) { CATALOG = {}; } } return CATALOG; }
+// Priser sätts HÄR, inte utifrån vad klienten skickar. Den levande produkttabellen
+// (som admin-panelen redigerar) är sanningen; den statiska catalog.json – autogenererad
+// från produkter.xlsx – är bara ett nödfallslager om en artikel av någon anledning
+// saknas i databasen (t.ex. precis efter en bulkimport som delvis misslyckats).
+let STATIC_CATALOG = null;
+function staticCatalog() { if (!STATIC_CATALOG) { try { STATIC_CATALOG = require("../../data/catalog.json"); } catch (e) { STATIC_CATALOG = {}; } } return STATIC_CATALOG; }
+async function lookupProduct(artikelnr) {
+  const live = await repo.products.get(artikelnr);
+  if (live) return live;
+  return staticCatalog()[artikelnr] || null;
+}
 
 // GET  /api/orders   (auth) – lista alla ordrar
 // POST /api/orders   (publik) – kund lägger en beställning
@@ -30,21 +37,23 @@ app.http("orders", {
 
     const b = await readBody(req);
     const kundIn = b.kund || {};
-    const cat = catalog();
     const raw = Array.isArray(b.items) ? b.items.slice(0, 200) : []; // tak: 200 rader
     if (!raw.length) return json(400, { ok: false, error: "Order saknar rader" });
 
-    // Sätt pris och benämning från serverkatalogen; okända artiklar avvisas.
-    const items = []; const okanda = [];
-    raw.forEach(function (it) {
+    // Sätt pris och benämning från serverkatalogen (databasen); okända eller ej
+    // beställningsbara artiklar avvisas.
+    const items = []; const okanda = []; const slutHosLev = [];
+    for (const it of raw) {
       const art = clip(it.artikelnr, 60);
       const antal = Math.max(1, Math.min(100000, parseInt(it.antal, 10) || 0));
-      const c = cat[art];
-      if (!c) { okanda.push(art); return; }
+      const c = await lookupProduct(art);
+      if (!c) { okanda.push(art); continue; }
+      if (c.lager === "Slut hos leverantör") { slutHosLev.push(art); continue; }
       const namn = ((c.kategori || "") + (c.marke ? " " + c.marke : "") + (c.beskrivning ? " (" + c.beskrivning + ")" : "")).trim();
       items.push({ namn: namn || art, artikelnr: art, antal: antal, pris_ex: +c.pris_ex || 0 });
-    });
+    }
     if (okanda.length) return json(400, { ok: false, error: "Okända artiklar: " + okanda.join(", ") });
+    if (slutHosLev.length) return json(400, { ok: false, error: "Ej beställningsbara (slut hos leverantör): " + slutHosLev.join(", ") });
     if (!items.length) return json(400, { ok: false, error: "Order saknar giltiga rader" });
     const summa_ex = items.reduce(function (s, it) { return s + it.pris_ex * it.antal; }, 0);
 

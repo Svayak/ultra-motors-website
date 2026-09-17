@@ -52,6 +52,13 @@
     // Personalkonton (admin)
     listUsers: function () { return req("GET", "/users", null, true).then(function (r) { return r.users || []; }); },
     createUser: function (u) { return req("POST", "/users", u, true).then(function (r) { return r.user; }); },
-    deleteUser: function (username) { return req("DELETE", "/users/" + encodeURIComponent(username), null, true); }
+    deleteUser: function (username) { return req("DELETE", "/users/" + encodeURIComponent(username), null, true); },
+
+    // Produkter (katalogen läses publikt av webbshopen, ändras av inloggad personal)
+    listProducts: function () { return req("GET", "/products", null, false).then(function (r) { return r.products || []; }); },
+    createProduct: function (p) { return req("POST", "/products", p, true).then(function (r) { return r.product; }); },
+    updateProduct: function (artikelnr, changes) { return req("PATCH", "/products/" + encodeURIComponent(artikelnr), changes, true).then(function (r) { return r.product; }); },
+    deleteProduct: function (artikelnr) { return req("DELETE", "/products/" + encodeURIComponent(artikelnr), null, true); },
+    importProducts: function (rows) { return req("POST", "/products/import", { products: rows }, true); }
   };
 })();

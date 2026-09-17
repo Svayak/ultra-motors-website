@@ -1,5 +1,17 @@
 (function () {
-  var PRODUCTS = window.PRODUCTS || [];
+  function loadProducts() {
+    try {
+      if (window.UM_API && window.UM_API.enabled && window.UM_API.enabled() && typeof window.UM_API.listProducts === "function") {
+        return window.UM_API.listProducts().catch(function () { return window.PRODUCTS || []; });
+      }
+    } catch (e) {}
+    return Promise.resolve(window.PRODUCTS || []);
+  }
+  loadProducts().then(initKassa);
+
+  function initKassa(PRODUCTS) {
+  var byArt = {};
+  (PRODUCTS || []).forEach(function (p) { byArt[p.artikelnr] = p; });
   var el = function (id) { return document.getElementById(id); };
   var kr = function (n) { return new Intl.NumberFormat("sv-SE").format(Math.round(n)) + " kr"; };
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
@@ -8,7 +20,7 @@
   var cart = loadCart();
 
   function lines() {
-    return Object.keys(cart).map(function (id) { return { p: PRODUCTS[+id], qty: cart[id] }; })
+    return Object.keys(cart).map(function (art) { return { p: byArt[art], qty: cart[art] }; })
       .filter(function (l) { return l.p; });
   }
   function totals(ls) {
@@ -57,7 +69,7 @@
       var order = {
         ordernr: ordernr, referens: d.referens, meddelande: d.meddelande, epost: d.epost, betalsatt: "Faktura",
         kund: { foretag: d.foretag, orgnr: d.orgnr, epost: d.epost, tel: d.tel, adress: d.adress },
-        items: ls.map(function (l) { var d = String(l.p.beskrivning || "").replace(/\b(?:VL|RL|AL)\b/g, "").replace(/\s{2,}/g, " ").trim(); return { namn: ((l.p.kategori || "") + (l.p.marke ? " " + l.p.marke : "") + (d ? " (" + d + ")" : "")).trim(), artikelnr: l.p.artikelnr, antal: l.qty, pris_ex: l.p.pris_ex }; })
+        items: ls.map(function (l) { var d = String(l.p.beskrivning || "").replace(/\b(?:VL|RL|AL|KL)\b/g, "").replace(/\s{2,}/g, " ").trim(); return { namn: ((l.p.kategori || "") + (l.p.marke ? " " + l.p.marke : "") + (d ? " (" + d + ")" : "")).trim(), artikelnr: l.p.artikelnr, antal: l.qty, pris_ex: l.p.pris_ex }; })
       };
 
       var nyKundNote = "Eftersom detta är ert första köp gör vi en kreditkontroll av företaget innan leverans. Vi sparar era uppgifter för att förenkla framtida köp.";
@@ -86,5 +98,6 @@
         finish("En orderbekräftelse skickas till " + esc(d.epost) + ". Är det ert första köp gör vi en kreditkontroll av företaget innan leverans och sparar era uppgifter för framtida köp. (Demoläge – e-post skickas skarpt av systemet.)");
       }
     });
+  }
   }
 })();

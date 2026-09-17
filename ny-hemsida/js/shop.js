@@ -1,4 +1,18 @@
 (function () {
+  function loadProducts() {
+    // Försiktigt: om något i live-anropet kastar synkront (t.ex. inaktuell cachad
+    // api.js utan en metod) ska sidan ändå falla tillbaka till den statiska katalogen
+    // istället för att gå sönder helt.
+    try {
+      if (window.UM_API && window.UM_API.enabled && window.UM_API.enabled() && typeof window.UM_API.listProducts === "function") {
+        return window.UM_API.listProducts().catch(function () { return window.PRODUCTS || []; });
+      }
+    } catch (e) {}
+    return Promise.resolve(window.PRODUCTS || []);
+  }
+  loadProducts().then(initShop);
+
+  function initShop(RAW_PRODUCTS) {
   // Normalisera märkesfältet till ett rent bilmärke
   var BRANDS = [
     [/VW|VOLKSWAGEN|GOLF|JETTA|SUPERVEE|FORMEL ?VEE/, "AUDI", "VW / Audi"],
@@ -45,15 +59,20 @@
     return "Övrigt";
   }
 
-  var PRODUCTS = (window.PRODUCTS || []).map(function (p, i) { p._id = i; p._brand = brandOf(p); p._mfr = manufacturerOf(p); return p; });
+  var PRODUCTS = (RAW_PRODUCTS || []).map(function (p) { p._brand = brandOf(p); p._mfr = manufacturerOf(p); return p; });
+  // Artikelnr är den unika, stabila nyckeln – varukorgen (delad via localStorage med
+  // kassa-sidan) indexeras på den, inte på array-position, eftersom produktlistan nu
+  // kan ändras live via adminpanelen mellan att kunden lägger i kundvagnen och betalar.
+  var byArt = {};
+  PRODUCTS.forEach(function (p) { byArt[p.artikelnr] = p; });
   function loadCart() {
     var c; try { c = JSON.parse(localStorage.getItem("um_cart")) || {}; } catch (e) { c = {}; }
     // Rensa rader som inte längre finns i katalogen (t.ex. efter prisuppdatering)
-    Object.keys(c).forEach(function (id) { if (!PRODUCTS[+id]) delete c[id]; });
+    Object.keys(c).forEach(function (art) { if (!byArt[art]) delete c[art]; });
     return c;
   }
   function saveCart() { try { localStorage.setItem("um_cart", JSON.stringify(cart)); } catch (e) {} }
-  var cart = loadCart(); // _id -> qty (delas med kassa-sidan via localStorage)
+  var cart = loadCart(); // artikelnr -> qty (delas med kassa-sidan via localStorage)
   var activeMfr = null;
   var activeCat = "Alla";
   var activeBrand = "";
@@ -158,21 +177,21 @@
         '<span class="prod-tag">' + esc(p.kategori) + '</span></div>' +
         '<div class="prod-meta">' + esc(p.marke) + (d ? ' · ' + esc(d) : '') + '</div></div>' +
         '<div class="prod-price"><b>' + kr(p.pris_ex) + '</b><span>' + kr(p.pris_inkl) + ' ink. moms</span></div>' +
-        (oos ? '<button class="prod-add" disabled>Ej beställningsbar</button>' : '<button class="prod-add" data-add="' + p._id + '">Lägg till</button>') +
+        (oos ? '<button class="prod-add" disabled>Ej beställningsbar</button>' : '<button class="prod-add" data-add="' + esc(p.artikelnr) + '">Lägg till</button>') +
         '</div>';
     }).join("") + (rows.length > 400 ? '<div class="prod-empty">Visar 400 av ' + rows.length + '. Sök för att förfina.</div>' : '');
   }
 
   el("list").addEventListener("click", function (e) {
     var b = e.target.closest("[data-add]"); if (!b) return;
-    var id = +b.dataset.add; cart[id] = (cart[id] || 0) + 1; renderCart();
-    if (window.umTrack) window.umTrack("add_to_cart", { art: PRODUCTS[id].artikelnr });
+    var art = b.dataset.add; cart[art] = (cart[art] || 0) + 1; renderCart();
+    if (window.umTrack) window.umTrack("add_to_cart", { art: art });
     b.textContent = "Tillagd ✓"; setTimeout(function () { b.textContent = "Lägg till"; }, 900);
   });
 
   // ---- Varukorg ----
   function cartLines() {
-    return Object.keys(cart).map(function (id) { return { p: PRODUCTS[+id], qty: cart[id] }; })
+    return Object.keys(cart).map(function (art) { return { p: byArt[art], qty: cart[art] }; })
       .filter(function (l) { return l.p; });
   }
   function totals() {
@@ -195,9 +214,9 @@
         return '<li class="cart-item">' +
           '<div><div class="ci-name">' + esc(l.p.artikelnr) + '</div>' +
           '<div class="ci-art">' + esc(l.p.kategori || l.p.beskrivning) + (l.p.marke ? ' · ' + esc(l.p.marke) : '') + '</div>' +
-          '<div class="qty"><button data-dec="' + l.p._id + '">−</button>' +
-          '<input readonly value="' + l.qty + '"><button data-inc="' + l.p._id + '">+</button></div> ' +
-          '<button class="ci-remove" data-rem="' + l.p._id + '">ta bort</button></div>' +
+          '<div class="qty"><button data-dec="' + esc(l.p.artikelnr) + '">−</button>' +
+          '<input readonly value="' + l.qty + '"><button data-inc="' + esc(l.p.artikelnr) + '">+</button></div> ' +
+          '<button class="ci-remove" data-rem="' + esc(l.p.artikelnr) + '">ta bort</button></div>' +
           '<div class="ci-line">' + kr(l.p.pris_ex * l.qty) + '</div>' +
           '</li>';
       }).join("") + '</ul>' +
@@ -212,9 +231,9 @@
   document.querySelector(".cart").addEventListener("click", function (e) {
     var inc = e.target.closest("[data-inc]"), dec = e.target.closest("[data-dec]"),
         rem = e.target.closest("[data-rem]"), go = e.target.closest("#tokassa");
-    if (inc) { cart[+inc.dataset.inc]++; renderCart(); }
-    else if (dec) { var id = +dec.dataset.dec; cart[id]--; if (cart[id] < 1) delete cart[id]; renderCart(); }
-    else if (rem) { delete cart[+rem.dataset.rem]; renderCart(); }
+    if (inc) { cart[inc.dataset.inc]++; renderCart(); }
+    else if (dec) { var art = dec.dataset.dec; cart[art]--; if (cart[art] < 1) delete cart[art]; renderCart(); }
+    else if (rem) { delete cart[rem.dataset.rem]; renderCart(); }
     else if (go) { saveCart(); location.href = "kassa.html"; }
   });
 
@@ -236,4 +255,5 @@
   // (Specialsatser-filtret ligger nu som en chip i kategori-raden och gatas i buildChips.)
 
   renderPicker(); renderCart();
+  }
 })();

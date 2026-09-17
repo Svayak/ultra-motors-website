@@ -6,7 +6,7 @@
  * exakt samma funktioner (orders/customers/users med list/get/save/update/remove)
  * och peka om require:t – ingen annan kod behöver ändras.
  */
-const { TableClient } = require("@azure/data-tables");
+const { TableClient, TableTransaction } = require("@azure/data-tables");
 
 const CONN = process.env.STORAGE_CONNECTION || process.env.AzureWebJobsStorage;
 
@@ -58,7 +58,33 @@ async function patch(table, pk, id, changes) {
   return put(table, pk, id, Object.assign(cur, changes));
 }
 
-const T_ORDERS = "orders", T_CUST = "customers", T_USERS = "users";
+// Ersätter en hel tabellpartition med en ny lista i batchar om 100 (Table Storage-gränsen
+// för transaktioner). Används av bulkimport (t.ex. produkter.xlsx) för att slippa tusentals
+// enskilda HTTP-anrop. Poster som saknas i den nya listan tas bort.
+async function bulkReplace(table, pk, rows, idField) {
+  await ensure(table);
+  const client = tc(table);
+  const existing = await listByPartition(table, pk);
+  const newIds = {};
+  rows.forEach(function (r) { newIds[String(r[idField])] = true; });
+
+  for (let i = 0; i < rows.length; i += 100) {
+    const tx = new TableTransaction();
+    rows.slice(i, i + 100).forEach(function (r) {
+      tx.upsertEntity(toEntity(pk, r[idField], r), "Replace");
+    });
+    await client.submitTransaction(tx.actions);
+  }
+  const toDelete = existing.filter(function (e) { return !newIds[String(e[idField])]; });
+  for (let i = 0; i < toDelete.length; i += 100) {
+    const tx = new TableTransaction();
+    toDelete.slice(i, i + 100).forEach(function (e) { tx.deleteEntity(pk, String(e[idField])); });
+    await client.submitTransaction(tx.actions);
+  }
+  return { saved: rows.length, removed: toDelete.length };
+}
+
+const T_ORDERS = "orders", T_CUST = "customers", T_USERS = "users", T_PRODUCTS = "products";
 
 module.exports = {
   orders: {
@@ -80,5 +106,13 @@ module.exports = {
     get: (username) => getOne(T_USERS, "user", String(username).toLowerCase()),
     save: (u) => put(T_USERS, "user", String(u.username).toLowerCase(), u),
     remove: (username) => del(T_USERS, "user", String(username).toLowerCase())
+  },
+  products: {
+    list: () => listByPartition(T_PRODUCTS, "product"),
+    get: (artikelnr) => getOne(T_PRODUCTS, "product", artikelnr),
+    save: (p) => put(T_PRODUCTS, "product", p.artikelnr, p),
+    update: (artikelnr, changes) => patch(T_PRODUCTS, "product", artikelnr, changes),
+    remove: (artikelnr) => del(T_PRODUCTS, "product", artikelnr),
+    bulkReplace: (rows) => bulkReplace(T_PRODUCTS, "product", rows, "artikelnr")
   }
 };

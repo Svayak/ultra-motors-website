@@ -20,8 +20,8 @@
   if(API){ var demoBadge=$(".badge-demo"); if(demoBadge) demoBadge.style.display="none"; }
   function loadRemote(){
     if(!API) return Promise.resolve();
-    return Promise.all([API.listOrders(), API.listCustomers()]).then(function(r){
-      S.orders = r[0] || []; S.customers = r[1] || [];
+    return Promise.all([API.listOrders(), API.listCustomers(), API.listProducts()]).then(function(r){
+      S.orders = r[0] || []; S.customers = r[1] || []; PRODUCTS = r[2] || [];
     });
   }
   function persistOrder(o){
@@ -45,13 +45,20 @@
   }
   function catNames(){ return Object.keys(catCounts()).sort(function(a,b){return a.localeCompare(b,"sv");}); }
   function renameCat(oldName,newName){
-    if(!newName||oldName===newName) return;
+    if(!newName||oldName===newName) return Promise.resolve();
+    if(API){
+      var targets=PRODUCTS.filter(function(p){return catOf(p)===oldName;});
+      return runLimited(targets,8,function(p){return API.updateProduct(p.artikelnr,{kategori:newName});})
+        .then(function(){ return loadRemote(); })
+        .catch(function(){ alert("Kunde inte byta namn på kategorin för alla produkter – kontrollera nätverket och försök igen."); });
+    }
     S.catRenames=S.catRenames||{};
     var raws={};
     (S.extraProducts||[]).concat(PRODUCTS).forEach(function(p){ if(catOf(p)===oldName&&p.kategori) raws[p.kategori]=1; });
     Object.keys(raws).forEach(function(raw){ S.catRenames[raw]=newName; });
     S.extraCats=(S.extraCats||[]).map(function(n){return n===oldName?newName:n;});
     save();
+    return Promise.resolve();
   }
   function addCat(name){
     name=(name||"").trim(); if(!name) return false;
@@ -535,7 +542,9 @@
     S.priceOverrides=S.priceOverrides||{};
     var cats=catCounts();
     $("#view").innerHTML=
-      '<div class="notice">Priser och produkter redigeras enklast i <b>produkter.xlsx</b> – dubbelklicka därefter <b>konvertera-produkter.command</b>. Snabbändringar här sparas lokalt som demo.</div>'+
+      '<div class="notice">'+(API?
+        'Produkter hanteras här direkt – pris, redigera, ta bort och ny produkt sparas i databasen och syns i webbshopen direkt. Stora prisuppdateringar från leverantör görs fortfarande enklast i <b>produkter.xlsx</b> + <b>konvertera-produkter.command</b>, som nu skriver till samma databas.'
+        :'Priser och produkter redigeras enklast i <b>produkter.xlsx</b> – dubbelklicka därefter <b>konvertera-produkter.command</b>. Snabbändringar här sparas lokalt som demo.')+'</div>'+
       '<div class="kpis">'+catNames().map(function(k){return kpi(k,cats[k]+" st","","");}).join('')+'</div>'+
       '<div class="toolbar"><input type="search" id="qp" placeholder="Sök produkt eller art.nr…">'+
       '<div class="spacer"></div>'+(flag("kategoriHanterare")?'<button class="btn sm" id="mgCats">Hantera kategorier</button> ':'')+'<button class="btn sm" id="openExcel">Öppna prislista (Excel)</button><button class="btn primary sm" id="addProd">+ Ny produkt</button></div>'+
@@ -545,16 +554,71 @@
       var all=extra.concat(PRODUCTS);
       var rows=all.filter(function(p){return !q||(p.marke+" "+p.beskrivning+" "+p.artikelnr).toLowerCase().indexOf(q)!==-1;}).slice(0,250);
       $("#prodPanel").innerHTML='<table class="tbl"><thead><tr><th>Art.nr</th><th>Benämning</th><th>Kategori</th><th class="num">Pris ex moms</th><th></th></tr></thead><tbody>'+
-        rows.map(function(p){ var pr=S.priceOverrides[p.artikelnr]!=null?S.priceOverrides[p.artikelnr]:p.pris_ex;
-          return '<tr><td>'+esc(p.artikelnr)+'</td><td>'+esc(p.marke)+' '+esc(p.beskrivning)+'</td><td>'+esc(catOf(p))+'</td><td class="num">'+kr(pr)+(S.priceOverrides[p.artikelnr]!=null?' *':'')+'</td><td class="num"><button class="btn sm" data-price="'+esc(p.artikelnr)+'" data-cur="'+pr+'">Ändra pris</button></td></tr>';}).join('')+
-        '</tbody></table><p class="mini" style="margin-top:10px">* = lokalt ändrat pris (demo). Visar max 250 rader – sök för att förfina.</p>';
-      document.querySelectorAll("[data-price]").forEach(function(b){b.addEventListener("click",function(){ var v=prompt("Nytt pris ex moms för "+b.dataset.price+":",b.dataset.cur); if(v!=null&&v!==""){ S.priceOverrides[b.dataset.price]=Math.round(+v)||0; save(); render(); } });});
+        rows.map(function(p){
+          var pr=API?p.pris_ex:(S.priceOverrides[p.artikelnr]!=null?S.priceOverrides[p.artikelnr]:p.pris_ex);
+          var oos=API&&p.lager==="Slut hos leverantör";
+          return '<tr'+(oos?' class="row-oos"':'')+'><td>'+esc(p.artikelnr)+'</td><td>'+esc(p.marke)+' '+esc(p.beskrivning)+(oos?' <span class="pill obetald">Slut hos lev.</span>':'')+'</td><td>'+esc(catOf(p))+'</td><td class="num">'+kr(pr)+(!API&&S.priceOverrides[p.artikelnr]!=null?' *':'')+'</td><td class="num">'+
+            (API?'<button class="btn sm" data-edit="'+esc(p.artikelnr)+'">Redigera</button>':'<button class="btn sm" data-price="'+esc(p.artikelnr)+'" data-cur="'+pr+'">Ändra pris</button>')+
+            '</td></tr>';
+        }).join('')+
+        '</tbody></table><p class="mini" style="margin-top:10px">'+(API?'Visar max 250 rader – sök för att förfina.':'* = lokalt ändrat pris (demo). Visar max 250 rader – sök för att förfina.')+'</p>';
+      if(API){
+        document.querySelectorAll("[data-edit]").forEach(function(b){b.addEventListener("click",function(){ editProd(b.dataset.edit); });});
+      } else {
+        document.querySelectorAll("[data-price]").forEach(function(b){b.addEventListener("click",function(){ var v=prompt("Nytt pris ex moms för "+b.dataset.price+":",b.dataset.cur); if(v!=null&&v!==""){ S.priceOverrides[b.dataset.price]=Math.round(+v)||0; save(); render(); } });});
+      }
     };
     $("#qp").addEventListener("input",render);
     $("#openExcel").addEventListener("click",function(){ modal('<h3>Redigera prislistan</h3><p>Produkter och priser ligger i <b>produkter.xlsx</b> i webbplatsmappen.</p><ol style="margin:12px 0 0 18px;line-height:1.8"><li>Öppna <b>produkter.xlsx</b> och ändra fritt.</li><li>Dubbelklicka <b>konvertera-produkter.command</b>.</li><li>Ladda om sidan – nya priser syns.</li></ol><div class="modal-actions"><button class="btn primary" data-close="1">Okej</button></div>'); });
     $("#addProd").addEventListener("click",function(){ addProd(); });
     $("#mgCats").addEventListener("click",function(){ manageCats(); });
     render();
+  }
+  function uniqList(arr){ return arr.filter(function(v,i,a){return v&&a.indexOf(v)===i;}).sort(function(a,b){return a.localeCompare(b,"sv");}); }
+  // Kör async-funktioner med begränsad samtidighet (skonsamt mot API:t vid t.ex.
+  // kategoribyte som kan beröra hundratals produkter).
+  function runLimited(items, limit, fn){
+    var i=0, active=0, results=new Array(items.length);
+    return new Promise(function(resolve){
+      function next(){
+        if(i>=items.length && active===0){ resolve(results); return; }
+        while(active<limit && i<items.length){
+          (function(idx){
+            active++;
+            fn(items[idx]).catch(function(){return null;}).then(function(r){ results[idx]=r; active--; next(); });
+          })(i++);
+        }
+      }
+      next();
+    });
+  }
+  function editProd(artikelnr){
+    var p=PRODUCTS.find(function(x){return x.artikelnr===artikelnr;});
+    if(!p) return;
+    var cats=catNames();
+    var marken=uniqList(PRODUCTS.map(function(x){return x.marke;}));
+    var opts=function(list,cur){return list.map(function(v){return '<option value="'+esc(v)+'"'+(v===cur?' selected':'')+'>'+esc(v)+'</option>';}).join("");};
+    modal('<h3>Redigera produkt</h3><div class="row"><div class="field"><label>Artikelnr</label><input value="'+esc(p.artikelnr)+'" disabled></div>'+
+      '<div class="field"><label>Kategori</label><select id="e_kat">'+opts(cats,catOf(p))+'</select></div></div>'+
+      '<div class="field"><label>Märke</label><select id="e_marke">'+opts(marken,p.marke)+'</select></div>'+
+      '<div class="field"><label>Beskrivning</label><input id="e_besk" value="'+esc(p.beskrivning)+'"></div>'+
+      '<div class="row"><div class="field"><label>Pris ex moms</label><input id="e_ex" type="number" min="0" value="'+(+p.pris_ex||0)+'"></div><div class="field"><label>Pris ink moms (auto)</label><input id="e_inkl" type="number" readonly style="background:var(--surface)" value="'+(+p.pris_inkl||0)+'"></div></div>'+
+      '<div class="field"><label><input type="checkbox" id="e_lager"'+(p.lager!=="Slut hos leverantör"?' checked':'')+'> I lager hos leverantör (avmarkerad = ej beställningsbar i webbshopen)</label></div>'+
+      '<div class="modal-actions" style="justify-content:space-between"><button class="btn danger" id="delProd">Ta bort produkt</button><span style="display:flex;gap:10px"><button class="btn" data-close="1">Avbryt</button><button class="btn primary" id="saveProdEdit">Spara</button></span></div>');
+    $("#e_ex").addEventListener("input",function(){ $("#e_inkl").value=Math.round((+this.value||0)*1.25); });
+    $("#delProd").addEventListener("click",function(){
+      if(!confirm("Ta bort "+p.artikelnr+" permanent från katalogen?")) return;
+      var btn=$("#delProd"); btn.disabled=true; btn.textContent="Tar bort…";
+      API.deleteProduct(p.artikelnr).then(function(){ return loadRemote(); }).then(function(){ closeModal(); route("produkter"); })
+        .catch(function(){ btn.disabled=false; btn.textContent="Ta bort produkt"; alert("Kunde inte ta bort produkten – kontrollera nätverket och försök igen."); });
+    });
+    $("#saveProdEdit").addEventListener("click",function(){
+      var ex=Math.round(+$("#e_ex").value||0);
+      var btn=$("#saveProdEdit"); btn.disabled=true; btn.textContent="Sparar…";
+      API.updateProduct(p.artikelnr,{ kategori:$("#e_kat").value, marke:$("#e_marke").value, beskrivning:$("#e_besk").value, pris_ex:ex, pris_inkl:Math.round(ex*1.25), lager:$("#e_lager").checked?"Beställningsvara":"Slut hos leverantör" })
+        .then(function(){ return loadRemote(); }).then(function(){ closeModal(); route("produkter"); })
+        .catch(function(){ btn.disabled=false; btn.textContent="Spara"; alert("Kunde inte spara ändringen – kontrollera nätverket och försök igen."); });
+    });
   }
   function manageCats(){
     var counts=catCounts();
@@ -564,7 +628,7 @@
         '<td class="num"><span class="cat-count">'+counts[n]+' st</span></td></tr>';
     }).join("");
     modal('<h3>Hantera kategorier</h3>'+
-      '<p class="mini" style="margin-bottom:14px">Byt namn genom att skriva i fältet – alla produkter i kategorin följer med. Lägg till en ny kategori längst ned. Ändringar sparas lokalt (demo); i skarp drift skrivs de tillbaka till katalogen tillsammans med prislistan.</p>'+
+      '<p class="mini" style="margin-bottom:14px">Byt namn genom att skriva i fältet – alla produkter i kategorin följer med. Lägg till en ny kategori längst ned.'+(API?' Ändringar sparas direkt till databasen (kan ta en liten stund för stora kategorier).':' Ändringar sparas lokalt (demo); i skarp drift skrivs de tillbaka till katalogen tillsammans med prislistan.')+'</p>'+
       '<div style="max-height:46vh;overflow:auto;padding-right:4px"><table class="cat-tbl"><thead><tr><th>Kategori</th><th class="num">Antal</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
       '<div class="row" style="margin-top:14px;align-items:flex-end"><div class="field" style="flex:1"><label>Ny kategori</label><input id="newCat" placeholder="t.ex. Ventilfjädrar"></div><button class="btn sm" id="addCatBtn" style="margin-bottom:2px">+ Lägg till</button></div>'+
       '<div class="modal-actions"><button class="btn" data-close="1">Avbryt</button><button class="btn primary" id="saveCats">Spara ändringar</button></div>');
@@ -573,30 +637,39 @@
       else { alert("Ange ett nytt, unikt kategorinamn."); }
     });
     $("#saveCats").addEventListener("click",function(){
+      var btn=$("#saveCats"); btn.disabled=true; btn.textContent="Sparar…";
+      var edits=[];
       document.querySelectorAll(".cat-in").forEach(function(inp){
-        renameCat(inp.dataset.old, (inp.value||"").trim());
+        edits.push(renameCat(inp.dataset.old,(inp.value||"").trim()));
       });
-      closeModal(); route("produkter");
+      Promise.all(edits).then(function(){ closeModal(); route("produkter"); });
     });
   }
   function addProd(){
     var cats=catNames();
-    var all=(S.extraProducts||[]).concat(PRODUCTS);
-    var uniq=function(arr){return arr.filter(function(v,i,a){return v&&a.indexOf(v)===i;});};
-    var marken=uniq(all.map(function(p){return p.marke;})).sort(function(a,b){return a.localeCompare(b,"sv");});
+    var marken=uniqList((S.extraProducts||[]).concat(PRODUCTS).map(function(p){return p.marke;}));
     var opts=function(list){return list.map(function(v){return '<option value="'+esc(v)+'">'+esc(v)+'</option>';}).join("");};
-    modal('<h3>Ny produkt (demo)</h3><div class="row"><div class="field"><label>Artikelnr</label><input id="p_art"></div>'+
+    modal('<h3>Ny produkt'+(API?'':' (demo)')+'</h3><div class="row"><div class="field"><label>Artikelnr</label><input id="p_art"></div>'+
       '<div class="field"><label>Kategori</label><select id="p_kat">'+opts(cats)+'</select></div></div>'+
       '<div class="field"><label>Märke</label><select id="p_marke">'+opts(marken)+'</select></div>'+
       '<div class="field"><label>Beskrivning</label><input id="p_besk"></div>'+
       '<div class="row"><div class="field"><label>Pris ex moms</label><input id="p_ex" type="number" min="0"></div><div class="field"><label>Pris ink moms (auto)</label><input id="p_inkl" type="number" readonly style="background:var(--surface)"></div></div>'+
-      '<p class="mini">Pris ink. moms räknas automatiskt (ex moms × 1,25). Kategori och märke väljs bland de som redan finns; nya läggs till i produkter.xlsx.</p>'+
+      '<p class="mini">Pris ink. moms räknas automatiskt (ex moms × 1,25). Kategori och märke väljs bland de som redan finns'+(API?'.':'; nya läggs till i produkter.xlsx.')+'</p>'+
       '<div class="modal-actions"><button class="btn" data-close="1">Avbryt</button><button class="btn primary" id="saveProd">Lägg till</button></div>');
     $("#p_ex").addEventListener("input",function(){ $("#p_inkl").value=Math.round((+this.value||0)*1.25); });
     $("#saveProd").addEventListener("click",function(){
+      var ex=Math.round(+$("#p_ex").value||0);
+      var artikelnr=($("#p_art").value||"").trim();
+      if(!artikelnr){ alert("Ange ett artikelnummer."); return; }
+      if(API){
+        var btn=$("#saveProd"); btn.disabled=true; btn.textContent="Lägger till…";
+        API.createProduct({ artikelnr:artikelnr, kategori:$("#p_kat").value, marke:$("#p_marke").value, beskrivning:$("#p_besk").value, marke_art:"Egen", pris_ex:ex, pris_inkl:Math.round(ex*1.25) })
+          .then(function(){ return loadRemote(); }).then(function(){ closeModal(); route("produkter"); })
+          .catch(function(e){ btn.disabled=false; btn.textContent="Lägg till"; alert((e&&e.status===409)?"Artikelnumret finns redan.":"Kunde inte lägga till produkten – kontrollera nätverket och försök igen."); });
+        return;
+      }
       S.extraProducts=S.extraProducts||[];
-      var ex=+$("#p_ex").value||0;
-      S.extraProducts.unshift({artikelnr:$("#p_art").value,kategori:$("#p_kat").value,marke:$("#p_marke").value,beskrivning:$("#p_besk").value,marke_art:"Egen",pris_ex:ex,pris_inkl:Math.round(ex*1.25),lager:"Beställningsvara"});
+      S.extraProducts.unshift({artikelnr:artikelnr,kategori:$("#p_kat").value,marke:$("#p_marke").value,beskrivning:$("#p_besk").value,marke_art:"Egen",pris_ex:ex,pris_inkl:Math.round(ex*1.25),lager:"Beställningsvara"});
       save(); closeModal(); route("produkter");
     });
   }
