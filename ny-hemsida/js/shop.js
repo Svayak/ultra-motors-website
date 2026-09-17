@@ -68,9 +68,10 @@
     { id: "ARP", logo: "img/logo-arp.svg", desc: "Bultar och pinnbultar – topplock, vevstake, ramlager, svänghjul och remskiva." },
     { id: "ACL", logo: "img/logo-acl.png", desc: "Motorlager för de flesta tillämpningar." }
   ];
-  // Rensar bort kortkoderna VL/RL/AL ur beskrivningen (kategorin visar redan typen)
-  function cleanDesc(s) { return String(s || "").replace(/\b(?:VL|RL|AL)\b/g, "").replace(/\s{2,}/g, " ").trim(); }
+  // Rensar bort kortkoderna VL/RL/AL/KL ur beskrivningen (kategorin visar redan typen)
+  function cleanDesc(s) { return String(s || "").replace(/\b(?:VL|RL|AL|KL)\b/g, "").replace(/\s{2,}/g, " ").trim(); }
   function isSpecial(p) { return /U/i.test(p.artikelnr || ""); }
+  function isOutOfStock(p) { return p.lager === "Slut hos leverantör"; }
   function countMfr(id) { return PRODUCTS.filter(function (p) { return p._mfr === id; }).length; }
 
   function renderPicker() {
@@ -149,13 +150,15 @@
     if (!rows.length) { el("list").innerHTML = '<div class="prod-empty">Inga produkter matchar ditt val.</div>'; return; }
     el("list").innerHTML = rows.slice(0, 400).map(function (p) {
       var d = cleanDesc(p.beskrivning);
-      return '<div class="prod-row">' +
+      var oos = isOutOfStock(p);
+      return '<div class="prod-row' + (oos ? ' prod-row--oos' : '') + '">' +
         '<div><div class="prod-name">' + esc(p.artikelnr) +
         (isSpecial(p) ? '<span class="prod-tag prod-tag--special">Specialsats</span>' : '') +
+        (oos ? '<span class="prod-tag prod-tag--oos">Slut hos leverantör</span>' : '') +
         '<span class="prod-tag">' + esc(p.kategori) + '</span></div>' +
         '<div class="prod-meta">' + esc(p.marke) + (d ? ' · ' + esc(d) : '') + '</div></div>' +
         '<div class="prod-price"><b>' + kr(p.pris_ex) + '</b><span>' + kr(p.pris_inkl) + ' ink. moms</span></div>' +
-        '<button class="prod-add" data-add="' + p._id + '">Lägg till</button>' +
+        (oos ? '<button class="prod-add" disabled>Ej beställningsbar</button>' : '<button class="prod-add" data-add="' + p._id + '">Lägg till</button>') +
         '</div>';
     }).join("") + (rows.length > 400 ? '<div class="prod-empty">Visar 400 av ' + rows.length + '. Sök för att förfina.</div>' : '');
   }

@@ -337,6 +337,10 @@ p { color: var(--color-muted); }
 .prod-meta { font-size: .82rem; color: var(--color-muted); margin-top: 2px; }
 .prod-tag { display: inline-block; background: var(--color-accent-soft); color: var(--color-accent-dark); font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; margin-left: 6px; }
 .prod-tag--special { background: var(--color-yellow); color: var(--color-yellow-ink); }
+.prod-tag--oos { background: var(--color-border); color: var(--color-muted); }
+.prod-row--oos { opacity: .6; }
+.prod-add[disabled] { background: var(--color-border); color: var(--color-muted); cursor: not-allowed; }
+.prod-add[disabled]:hover { background: var(--color-border); }
 .prod-price { text-align: right; white-space: nowrap; }
 /* Specialsatser-filter (checkbox i verktygsraden) */
 .shop-toggle { display: inline-flex; align-items: center; gap: 8px; padding: 0 16px; height: 46px; border: 1px solid var(--color-border); border-radius: 10px; background: #fff; font-weight: 600; color: var(--color-text); cursor: pointer; white-space: nowrap; transition: border-color .15s, background .15s; }
