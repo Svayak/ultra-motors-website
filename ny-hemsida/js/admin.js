@@ -15,6 +15,9 @@
   // ---------- backend (API) ----------
   // Aktiveras när UM_CONFIG.apiBase är satt. Annars körs allt lokalt (demoläge).
   var API = (window.UM_API && window.UM_API.enabled && window.UM_API.enabled()) ? window.UM_API : null;
+  // Badgen i toppen ska bara synas i faktiskt demoläge (ordrar/kunder lokala) – i skarp
+  // drift är den missvisande, så göm den. Produkter-vyn har sin egen förklaring separat.
+  if(API){ var demoBadge=$(".badge-demo"); if(demoBadge) demoBadge.style.display="none"; }
   function loadRemote(){
     if(!API) return Promise.resolve();
     return Promise.all([API.listOrders(), API.listCustomers()]).then(function(r){
