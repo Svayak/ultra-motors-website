@@ -6,11 +6,13 @@ const { processOrder } = require("../fortnox");
 const { makeStore } = require("../tokenStore");
 
 function cors(env) {
-  return {
-    "Access-Control-Allow-Origin": env.ALLOWED_ORIGIN || "*",
+  var h = {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type"
   };
+  var o = env.ALLOWED_ORIGIN;
+  if (o && o !== "") { h["Access-Control-Allow-Origin"] = o; h["Vary"] = "Origin"; }
+  return h;
 }
 
 app.http("placeOrder", {
@@ -29,8 +31,9 @@ app.http("placeOrder", {
       // TODO i produktion: spara ordern i databas + notifiera Ultra (mejl).
 
       // Är detta en befintlig, godkänd kund? (annars = ny kund → kreditkoll först)
-      const allow = (env.FORTNOX_APPROVED_ORGNR || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
-      const godkand = allow.includes(order.kund.orgnr);
+      const allow = (env.FORTNOX_APPROVED_ORGNR || "").split(",").map(function (s) { return s.trim().replace(/\s/g, ""); }).filter(Boolean);
+      const normOrgnr = String(order.kund.orgnr || "").replace(/\s/g, "");
+      const godkand = !!normOrgnr && allow.includes(normOrgnr);
       const nyKund = !godkand;
 
       // TODO (e-post): skicka orderbekräftelse till order.kund.epost via e-posttjänst
@@ -54,7 +57,7 @@ app.http("placeOrder", {
       return { status: 200, headers: cors(env), jsonBody: { ok: true, faktura: true, nyKund: false, ...result } };
     } catch (err) {
       context.error(err);
-      return { status: 500, headers: cors(env), jsonBody: { ok: false, error: String(err.message || err) } };
+      return { status: 500, headers: cors(env), jsonBody: { ok: false, error: "Internt fel – kontakta support." } };
     }
   }
 });

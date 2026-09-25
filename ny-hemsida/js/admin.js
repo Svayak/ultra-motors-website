@@ -111,7 +111,7 @@
         .catch(function(){ btn.disabled=false; btn.textContent=old; $("#pw").value=""; $("#pw").placeholder="Fel användarnamn eller lösenord"; });
     } else {
       if ($("#pw").value.trim().toLowerCase()==="ultra"){ S=load(); enterApp(); }
-      else { $("#pw").value=""; $("#pw").placeholder="Fel lösenord – prova 'ultra'"; }
+      else { $("#pw").value=""; $("#pw").placeholder="Fel lösenord"; }
     }
   }
 

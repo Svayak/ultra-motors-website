@@ -110,7 +110,8 @@ app.http("productsImport", {
       const result = await repo.products.bulkReplace(rows);
       return json(200, { ok: true, saved: result.saved, removed: result.removed, skipped, renamed });
     } catch (e) {
-      return json(500, { ok: false, error: "Import misslyckades: " + (e && e.message ? e.message : String(e)) });
+      console.error("products import error:", e);
+      return json(500, { ok: false, error: "Import misslyckades – kontrollera loggarna." });
     }
   }
 });

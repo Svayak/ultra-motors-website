@@ -36,7 +36,7 @@
       }).catch(function () { $("#sapw").value = ""; $("#sapw").placeholder = "Fel uppgifter eller inte admin"; });
     } else {
       if ($("#sapw").value.trim().toLowerCase() === "ultra-dev") { enterSA(); }
-      else { $("#sapw").value = ""; $("#sapw").placeholder = "Fel kod – prova 'ultra-dev'"; }
+      else { $("#sapw").value = ""; $("#sapw").placeholder = "Fel lösenord"; }
     }
   }
 

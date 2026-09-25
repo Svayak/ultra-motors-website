@@ -49,7 +49,7 @@ app.http("setupAdmin", {
     }
     const existing = await repo.users.get(b.username);
     const u = {
-      username: String(b.username).toLowerCase(), name: b.name || b.username, role: b.role || "admin",
+      username: String(b.username).toLowerCase(), name: b.name || b.username, role: "admin",
       pwhash: auth.hashPassword(b.password), skapad: new Date().toISOString().slice(0, 10)
     };
     await repo.users.save(u);

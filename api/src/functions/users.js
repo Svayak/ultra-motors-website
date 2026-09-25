@@ -36,7 +36,7 @@ app.http("userItem", {
   methods: ["DELETE", "OPTIONS"], authLevel: "anonymous", route: "users/{username}",
   handler: async (req) => {
     if (req.method === "OPTIONS") return preflight();
-    const p = auth.requireAuth(req);
+    const p = await auth.requireUser(req);
     if (!auth.isAdmin(p)) return json(403, { ok: false, error: "Kräver admin" });
     const uname = String(req.params.username || "").toLowerCase();
     if (uname === p.username) return json(400, { ok: false, error: "Du kan inte ta bort ditt eget konto" });

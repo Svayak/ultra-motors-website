@@ -1,10 +1,11 @@
 const { app } = require("@azure/functions");
+const crypto = require("crypto");
 const repo = require("../db/repo");
 const auth = require("../auth");
 const rl = require("../ratelimit");
 const { json, preflight, readBody } = require("../http");
 
-function orderNo() { return "UM-" + new Date().getFullYear() + "-" + String(Date.now()).slice(-6); }
+function orderNo() { return "UM-" + new Date().getFullYear() + "-" + crypto.randomBytes(4).toString("hex").toUpperCase(); }
 function clip(s, n) { return String(s == null ? "" : s).slice(0, n); }
 
 // Priser sätts HÄR, inte utifrån vad klienten skickar. Den levande produkttabellen

@@ -1,7 +1,8 @@
 /* Autentisering: lösenordshashning (scrypt) + signerade tokens (HMAC).
  * Ingen extern JWT-modul behövs – Node:s inbyggda crypto räcker. */
 const crypto = require("crypto");
-const SECRET = process.env.AUTH_SECRET || "dev-secret-byt-mig";
+const SECRET = process.env.AUTH_SECRET;
+if (!SECRET) throw new Error("AUTH_SECRET is not set. Set this environment variable before starting.");
 
 function hashPassword(pw) {
   const salt = crypto.randomBytes(16).toString("hex");

@@ -30,7 +30,7 @@ app.http("createInvoice", {
       return { status: 200, jsonBody: { ok: true, ...result } };
     } catch (err) {
       context.error(err);
-      return { status: 500, jsonBody: { ok: false, error: String(err.message || err) } };
+      return { status: 500, jsonBody: { ok: false, error: "Internt fel – kontrollera loggarna." } };
     }
   }
 });

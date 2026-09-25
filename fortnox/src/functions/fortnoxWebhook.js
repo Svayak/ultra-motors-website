@@ -10,8 +10,11 @@ app.http("fortnoxWebhook", {
   authLevel: "anonymous", // Fortnox känner inte till funktionsnycklar – skydda med hemlig token i URL
   handler: async (request, context) => {
     var env = process.env;
-    // Enkel verifiering: ?token=... måste matcha WEBHOOK_SECRET
-    if (env.WEBHOOK_SECRET && new URL(request.url).searchParams.get("token") !== env.WEBHOOK_SECRET) {
+    // Verifiering: kontrollera headern x-um-webhook-secret i första hand (föredra framför
+    // query-parametern ?token= som exponeras i loggar). Fortnox stöder custom headers i
+    // webhook-konfigurationen – byt där om möjligt. Fallback på ?token= för bakåtkompatibilitet.
+    const incomingSecret = request.headers.get("x-um-webhook-secret") || new URL(request.url).searchParams.get("token");
+    if (env.WEBHOOK_SECRET && incomingSecret !== env.WEBHOOK_SECRET) {
       return { status: 401, jsonBody: { error: "Ej behörig" } };
     }
     try {
@@ -29,7 +32,7 @@ app.http("fortnoxWebhook", {
       return { status: 200, jsonBody: { ok: true, betald: false, nr: inv.DocumentNumber } };
     } catch (err) {
       context.error(err);
-      return { status: 500, jsonBody: { ok: false, error: String(err.message || err) } };
+      return { status: 500, jsonBody: { ok: false, error: "Internt fel – kontrollera loggarna." } };
     }
   }
 });
