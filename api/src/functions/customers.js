@@ -58,7 +58,12 @@ app.http("customerItem", {
     const id = req.params.id;
 
     if (req.method === "GET") { const c = await repo.customers.get(id); return c ? json(200, { ok: true, customer: c }) : json(404, { ok: false }); }
-    if (req.method === "DELETE") { await repo.customers.remove(id); return json(200, { ok: true }); }
+    if (req.method === "DELETE") {
+      // Ordrar pekar på kunden via kundId – en borttagen kund skulle göra dem "(okänd)".
+      const harOrdrar = (await repo.orders.list()).some(function (o) { return o.kundId === id; });
+      if (harOrdrar) return json(409, { ok: false, error: "Kunden har ordrar och kan inte tas bort. Sätt status Pausad i stället." });
+      await repo.customers.remove(id); return json(200, { ok: true });
+    }
 
     const b = await readBody(req);
     const c = await repo.customers.update(id, cleanCust(b, {}));

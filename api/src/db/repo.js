@@ -99,6 +99,7 @@ module.exports = {
     list: () => listByPartition(T_ORDERS, "order"),
     get: (id) => getOne(T_ORDERS, "order", id),
     save: (o) => put(T_ORDERS, "order", o.id, o),
+    create: (o) => insert(T_ORDERS, "order", o.id, o),
     update: (id, changes) => patch(T_ORDERS, "order", id, changes),
     remove: (id) => del(T_ORDERS, "order", id)
   },

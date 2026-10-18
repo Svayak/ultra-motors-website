@@ -5,7 +5,10 @@ const auth = require("../auth");
 const rl = require("../ratelimit");
 const { json, preflight, readBody } = require("../http");
 
-function orderNo() { return "UM-" + new Date().getFullYear() + "-" + crypto.randomBytes(4).toString("hex").toUpperCase(); }
+function orderNo(hex) { return "UM-" + new Date().getFullYear() + "-" + (hex || crypto.randomBytes(4).toString("hex")).slice(0, 8).toUpperCase(); }
+// Org.nr jämförs bara på siffrorna – "556123-4567", "5561234567" och "556123 4567" är samma bolag.
+function orgDigits(s) { return String(s || "").replace(/\D/g, ""); }
+function orderReply(o) { return json(200, { ok: true, ordernr: o.id, nyKund: !!o.ny_kund, pending: !o.godkand }); }
 function clip(s, n) { return String(s == null ? "" : s).slice(0, n); }
 
 // Fakturaposten som adminportalen sätter när en order faktureras (fakturan skapas manuellt
@@ -48,6 +51,16 @@ app.http("orders", {
 
     const b = await readBody(req);
     const kundIn = b.kund || {};
+
+    // Idempotensnyckel från kassan: samma nyckel = samma beställning. Om kunden försöker igen
+    // efter ett nätverksfel (där ordern faktiskt sparades men svaret försvann) returneras
+    // den befintliga ordern i stället för en dubblett. Ordernumret härleds ur nyckeln.
+    const nyckel = /^[A-Za-z0-9-]{16,64}$/.test(String(b.idempotencyKey || "")) ? String(b.idempotencyKey) : "";
+    const nyckelId = nyckel ? orderNo(crypto.createHash("sha256").update(nyckel).digest("hex")) : "";
+    if (nyckelId) {
+      const tidigare = await repo.orders.get(nyckelId);
+      if (tidigare && tidigare.klientnyckel === nyckel) return orderReply(tidigare);
+    }
     const raw = Array.isArray(b.items) ? b.items.slice(0, 200) : []; // tak: 200 rader
     if (!raw.length) return json(400, { ok: false, error: "Order saknar rader" });
 
@@ -74,20 +87,33 @@ app.http("orders", {
       epost: clip(kundIn.epost, 160), tel: clip(kundIn.tel, 40), adress: clip(kundIn.adress, 300)
     };
 
-    // Matcha mot befintlig kund på org.nr – sparade kunder slipper godkännande.
-    const orgnr = kund.orgnr.replace(/\s/g, "");
+    // Matcha mot befintlig kund på org.nr – sparade, aktiva kunder slipper godkännande.
+    const orgnr = orgDigits(kund.orgnr);
     const custs = await repo.customers.list();
-    const match = custs.find(function (c) { return orgnr && String(c.orgnr || "").replace(/\s/g, "") === orgnr; });
+    const match = custs.find(function (c) { return orgnr && orgDigits(c.orgnr) === orgnr; });
     const godkand = !!(match && match.status === "aktiv");
 
     const order = {
-      id: orderNo(), datum: new Date().toISOString().slice(0, 10), status: "Ny",
+      id: "", datum: new Date().toISOString().slice(0, 10), status: "Ny",
       betalsatt: "Faktura", kundId: match ? match.id : null, kundinfo: match ? null : kund,
+      // Det kunden skrev in för just den här ordern (leveransadress, kontaktperson m.m.).
+      // Sparas alltid – även för befintliga kunder, som kan vilja få leverans till en annan adress.
+      leverans: { kontakt: kund.kontakt, epost: kund.epost, tel: kund.tel, adress: kund.adress },
       items: items, summa_ex: summa_ex, referens: clip(b.referens, 120), meddelande: clip(b.meddelande, 1000),
-      godkand: godkand, ny_kund: !match, betald: false, faktura: null
+      godkand: godkand, ny_kund: !match, betald: false, faktura: null, klientnyckel: nyckel
     };
-    await repo.orders.save(order);
-    return json(200, { ok: true, ordernr: order.id, nyKund: !match, pending: !godkand });
+    // create() skriver aldrig över en befintlig order. Krockar nyckel-id:t med samma nyckel
+    // (två samtidiga försök) returneras den ordern; annars provas ett slumpat nummer.
+    for (let attempt = 0; attempt < 5; attempt++) {
+      order.id = (attempt === 0 && nyckelId) ? nyckelId : orderNo();
+      const saved = await repo.orders.create(order);
+      if (saved) return orderReply(saved);
+      if (attempt === 0 && nyckelId) {
+        const tidigare = await repo.orders.get(nyckelId);
+        if (tidigare && tidigare.klientnyckel === nyckel) return orderReply(tidigare);
+      }
+    }
+    return json(500, { ok: false, error: "Kunde inte spara ordern – försök igen." });
   }
 });
 
