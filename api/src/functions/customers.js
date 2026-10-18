@@ -19,6 +19,8 @@ function cleanCust(b, base) {
   if ("adress" in b) o.adress = clip(b.adress, 300);
   if ("betaldagar" in b) o.betaldagar = numClip(b.betaldagar, 0, 365, 30);
   if ("rabatt" in b) o.rabatt = numClip(b.rabatt, 0, 100, 0);
+  if ("kreditgrans" in b) o.kreditgrans = numClip(b.kreditgrans, 0, 100000000, 0);
+  if ("ingenGrans" in b) o.ingenGrans = !!b.ingenGrans;
   if ("status" in b) o.status = ["aktiv", "pausad", "vantar"].indexOf(b.status) > -1 ? b.status : "aktiv";
   if ("noter" in b) o.noter = clip(b.noter, 2000);
   return o;

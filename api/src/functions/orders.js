@@ -4,6 +4,7 @@ const repo = require("../db/repo");
 const auth = require("../auth");
 const rl = require("../ratelimit");
 const { json, preflight, readBody } = require("../http");
+const { getFlags } = require("../flags");
 
 function orderNo(hex) { return "UM-" + new Date().getFullYear() + "-" + (hex || crypto.randomBytes(4).toString("hex")).slice(0, 8).toUpperCase(); }
 // Org.nr jämförs bara på siffrorna – "556123-4567", "5561234567" och "556123 4567" är samma bolag.
@@ -48,6 +49,9 @@ app.http("orders", {
 
     // POST – publik order. Rate-limitad mot spam.
     if (!rl.allow("order:" + rl.clientIp(req), 20, 60000)) return json(429, { ok: false, error: "För många beställningar – vänta en stund." });
+
+    // Beställningen kan stängas av i superadmin – gäller även anrop direkt mot API:t.
+    if (!(await getFlags()).bestallning) return json(403, { ok: false, error: "Beställningen är tillfälligt stängd. Kontakta oss på info@ultramotors.se eller 08-550 946 55." });
 
     const b = await readBody(req);
     const kundIn = b.kund || {};

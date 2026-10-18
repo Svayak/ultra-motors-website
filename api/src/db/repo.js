@@ -11,7 +11,13 @@ const { TableClient, TableTransaction } = require("@azure/data-tables");
 const CONN = process.env.STORAGE_CONNECTION || process.env.AzureWebJobsStorage;
 
 function tc(table) { return TableClient.fromConnectionString(CONN, table); }
-async function ensure(table) { try { await tc(table).createTable(); } catch (e) { /* finns redan */ } }
+// Skapa tabellen en gång per instans (inte ett extra anrop vid varje databasoperation).
+const ensured = {};
+async function ensure(table) {
+  if (ensured[table]) return;
+  try { await tc(table).createTable(); } catch (e) { /* finns redan */ }
+  ensured[table] = true;
+}
 
 // Table Storage kan bara lagra platta värden – objekt/arrayer serialiseras till JSON.
 function toEntity(pk, id, obj) {
@@ -40,6 +46,15 @@ async function listByPartition(table, pk) {
   const out = [];
   const it = tc(table).listEntities({ queryOptions: { filter: "PartitionKey eq '" + pk + "'" } });
   for await (const e of it) out.push(fromEntity(e));
+  return out;
+}
+// Alla poster vars partition (datum ÅÅÅÅ-MM-DD) är >= fromPk. Används för besöksstatistik.
+async function listFromPartition(table, fromPk) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fromPk)) throw new Error("ogiltigt datum");
+  await ensure(table);
+  const out = [];
+  const it = tc(table).listEntities({ queryOptions: { filter: "PartitionKey ge '" + fromPk + "'" } });
+  for await (const e of it) { const o = fromEntity(e); o.datum = e.partitionKey; out.push(o); }
   return out;
 }
 async function getOne(table, pk, id) {
@@ -93,6 +108,7 @@ async function bulkReplace(table, pk, rows, idField) {
 }
 
 const T_ORDERS = "orders", T_CUST = "customers", T_USERS = "users", T_PRODUCTS = "products";
+const T_MSG = "messages", T_SETTINGS = "settings", T_EVENTS = "events";
 
 module.exports = {
   orders: {
@@ -124,5 +140,22 @@ module.exports = {
     update: (artikelnr, changes) => patch(T_PRODUCTS, "product", artikelnr, changes),
     remove: (artikelnr) => del(T_PRODUCTS, "product", artikelnr),
     bulkReplace: (rows) => bulkReplace(T_PRODUCTS, "product", rows, "artikelnr")
+  },
+  // Meddelanden från kontaktformuläret
+  messages: {
+    list: () => listByPartition(T_MSG, "message"),
+    create: (m) => insert(T_MSG, "message", m.id, m),
+    update: (id, changes) => patch(T_MSG, "message", id, changes),
+    remove: (id) => del(T_MSG, "message", id)
+  },
+  // Delade inställningar (t.ex. funktionsväxlar) – en post per nyckel med värdet i `value`
+  settings: {
+    get: async (key) => { const e = await getOne(T_SETTINGS, "setting", key); return e ? e.value : null; },
+    set: (key, value) => put(T_SETTINGS, "setting", key, { value: value })
+  },
+  // Besökshändelser (sidvisningar m.m.), en partition per dag. Inga personuppgifter.
+  events: {
+    add: (e) => insert(T_EVENTS, e.datum, e.id, e),
+    since: (fromDate) => listFromPartition(T_EVENTS, fromDate)
   }
 };
