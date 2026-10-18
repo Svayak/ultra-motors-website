@@ -9,7 +9,7 @@ produkter och personalkonton. **Ingen Fortnox-koppling** – fakturering sköts 
 
 - **Azure Functions** (Node, v4-programmeringsmodellen) – HTTP-API:t. Körs som API i Azure Static
   Web Apps (`platform.apiRuntime` i `ny-hemsida/staticwebapp.config.json`).
-- **Azure Table Storage** – databasen. Tabellerna `orders`, `customers`, `users` och `products`
+- **Azure Table Storage** – databasen. Tabellerna `orders`, `customers`, `users`, `products`, `messages`, `settings`, `events`
   skapas automatiskt vid första anrop.
 - **Personliga konton** med inloggning (scrypt-hash + HMAC-signerad token, 12 h session). Roller:
   `admin` och `personal`. Ett borttaget konto ogiltigförklarar dess tokens direkt.
@@ -20,6 +20,10 @@ produkter och personalkonton. **Ingen Fortnox-koppling** – fakturering sköts 
   (kontaktperson, e-post, telefon, leveransadress) sparas alltid i `leverans`, även för befintliga kunder.
 - **Inga dubblettordrar vid omförsök:** kassan skickar en `idempotencyKey` (16–64 tecken `A-Z a-z 0-9 -`).
   Samma nyckel ger samma order tillbaka i stället för en ny. Ordrar skapas aldrig genom att skriva över en befintlig.
+- **Funktionsväxlar i databasen** (`settings`). Är `bestallning` avstängd nekar `POST /api/orders` (403);
+  är `analytics` avstängd sparas inga besökshändelser.
+- **Besöksstatistik utan personuppgifter:** varje händelse sparas med datum, sida, hänvisande domän och
+  enhetstyp – ingen IP, inga cookies, inget besökar-id. Ordrar i statistiken räknas från ordertabellen.
 - **Rate limiting** i minnet: inloggning max 8 försök/minut och IP, order max 20/minut och IP.
   Gäller per instans, inte globalt.
 
@@ -32,6 +36,10 @@ produkter och personalkonton. **Ingen Fortnox-koppling** – fakturering sköts 
 | `src/functions/orders.js` | Ordrar (publik POST, övrigt inloggad) |
 | `src/functions/customers.js` | Kunder (inloggad) |
 | `src/functions/products.js` | Produkter (publik läsning, ändring inloggad) + bulkimport |
+| `src/functions/messages.js` | Kontaktformulärets meddelanden |
+| `src/functions/settings.js` | Funktionsväxlar (`/api/flags`) |
+| `src/functions/track.js` | Besöksstatistik: insamling (`/api/track`) och sammanställning (`/api/stats`) |
+| `src/flags.js` | Standardvärden och läsning av funktionsväxlar |
 | `src/auth.js` | Lösenordshash, tokens, `requireUser` |
 | `src/db/repo.js` | **All** databaslogik |
 | `src/http.js`, `src/ratelimit.js` | CORS/JSON-hjälpare, rate limiting |
@@ -63,6 +71,13 @@ skriva en ny fil med samma funktioner och peka om `require`:t – plus en engån
 | GET | `/api/products/{artikelnr}` | publik | En produkt |
 | PATCH/DELETE | `/api/products/{artikelnr}` | inloggad | Uppdatera/ta bort produkt |
 | POST | `/api/products/import` | inloggad | **Ersätter hela katalogen** med `{ products: [...] }` |
+| POST | `/api/messages` | publik | Kontaktformulär (max 5 per 10 min och IP, honungsfälla `webbplats`) |
+| GET | `/api/messages` | inloggad | Lista meddelanden, nyast först |
+| PATCH/DELETE | `/api/messages/{id}` | inloggad | Markera hanterad (`{ hanterad }`) / ta bort |
+| GET | `/api/flags` | publik | Funktionsväxlar |
+| PUT | `/api/flags` | admin | Ändra växlar: `{ flags: { namn: bool } }` |
+| POST | `/api/track` | publik | Besökshändelse `{ t, path, ref, dev }` (svarar alltid 204) |
+| GET | `/api/stats?days=30` | inloggad | Statistik för perioden (max 90 dagar) + föregående period |
 
 Token skickas i headern `x-ums-auth: Bearer <token>` (Static Web Apps reserverar `Authorization`).
 
@@ -71,7 +86,7 @@ Fält som sparas via PATCH:
   `faktura`. `faktura` är `{ skickad, betald, forfaller: "ÅÅÅÅ-MM-DD", fakturanr? }` eller `null`
   (ingen faktura); okända fält i den rensas bort.
 - **Kund:** `foretag`, `orgnr`, `kontakt`, `epost`, `tel`, `adress`, `betaldagar`, `rabatt`,
-  `status` (`aktiv`/`pausad`/`vantar`), `noter`. Kreditgräns sparas inte.
+  `status` (`aktiv`/`pausad`/`vantar`), `noter`, `kreditgrans`, `ingenGrans`.
 - **Produkt:** `kategori`, `marke`, `beskrivning`, `marke_art`, `pris_ex`, `pris_inkl`, `lager`.
 
 Vid import med dubbletter av samma artikelnummer döps senare förekomster om med märket som
@@ -116,7 +131,7 @@ måste då också utökas.)
 
 ## Byta till Azure SQL senare
 
-1. Skapa Azure SQL-databas med tabellerna `orders`, `customers`, `users`, `products`.
+1. Skapa Azure SQL-databas med motsvarande tabeller (`orders`, `customers`, `users`, `products`, `messages`, `settings`, `events`).
 2. Skriv `src/db/repo.sql.js` som exporterar samma gränssnitt som `repo.js` fast mot SQL.
 3. Byt `require("../db/repo")` → `require("../db/repo.sql")`.
 4. Engångsmigrering: läs alla poster via gamla `repo.js` och skriv in dem via det nya.

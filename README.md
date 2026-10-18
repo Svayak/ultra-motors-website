@@ -12,9 +12,9 @@ betalningslogik (se [Fortnox](#fortnox) nedan).
 |-----|-------------|
 | **Publik webbplats** | Hem, Om Ultra, Produkter, Beställ, Kontakt |
 | **Beställning** | Välj tillverkare (ARP/ACL) → filtrera på bilmärke/kategori/specialsatser → varukorg → kassa (faktura) |
-| **Adminportal** (`admin.html`) | Översikt, uppgifter (att skickas / att faktureras / har fakturerats), beställningar, kunder, produkter, fakturor, analys, inställningar & personalkonton |
+| **Adminportal** (`admin.html`) | Översikt, uppgifter (att skickas / att faktureras / har fakturerats), beställningar, kunder, produkter, fakturor, meddelanden, analys, inställningar & personalkonton |
 | **Superadmin** (`superadmin.html`) | Utvecklarpanel: funktionsväxlar, statistik, analys, data & underhåll, konfiguration |
-| **Backend** (`api/`) | Azure Functions + Table Storage: inloggning, personalkonton, ordrar, kunder, produkter |
+| **Backend** (`api/`) | Azure Functions + Table Storage: inloggning, personalkonton, ordrar, kunder, produkter, meddelanden, funktionsväxlar, statistik |
 | **Fortnox** (`fortnox/`) | Fristående, **ej driftsatt** Function App för automatisk fakturering – se nedan |
 
 ## Struktur
@@ -30,8 +30,8 @@ Ultra motors/
 │  │  ├─ api.js                API-klient mot backend
 │  │  ├─ shop.js, kassa.js     Beställning och kassa
 │  │  ├─ admin.js, admin-data.js   Adminportal + demodata (seed)
-│  │  ├─ superadmin.js, flags.js   Utvecklarpanel + funktionsväxlar
-│  │  ├─ track.js              Enkel sidvisningsloggning (lokalt i webbläsaren)
+│  │  ├─ superadmin.js, flags.js   Utvecklarpanel + funktionsväxlar (lagras i databasen)
+│  │  ├─ track.js, stats-view.js   Besöksstatistik utan cookies + statistikvyn i admin
 │  │  └─ products.js           Autogenererad från produkter.xlsx
 │  ├─ img/                     Bilder
 │  ├─ produkter.xlsx           Produktkatalog (källa för bulkuppdatering)
@@ -48,7 +48,7 @@ Ultra motors/
 
 - **Frontend:** ren HTML/CSS/vanilla JavaScript, inget byggsteg. Chart.js och jsPDF laddas från cdnjs i admin.
 - **Backend:** Azure Functions (Node, v4-programmeringsmodellen), körs som API i Azure Static Web Apps.
-- **Databas:** Azure Table Storage (tabellerna `orders`, `customers`, `users`, `products`). All
+- **Databas:** Azure Table Storage (tabellerna `orders`, `customers`, `users`, `products`, `messages`, `settings`, `events`). All
   databaslogik är isolerad i `api/src/db/repo.js`, så ett framtida byte till Azure SQL blir minimalt.
 - **Inloggning:** personliga konton (scrypt-hash + HMAC-signerad token, 12 h). Kunder beställer utan
   inloggning och matchas mot kundregistret via organisationsnummer.
@@ -108,16 +108,17 @@ Gäller skarp drift (`apiBase: "/api"`):
 
 - **Ordrar fakturerade före 2026-10-18** saknar fakturapost i databasen (den sparades då bara
   lokalt) och syns därför inte under Fakturor. Nya faktureringar sparas korrekt.
-- **Kreditgräns** (`kreditgrans`, `ingenGrans`) sparas inte av backend.
-- **Funktionsväxlar** (superadmin) lagras i den egna webbläsarens localStorage och påverkar inte
-  andra besökare – t.ex. stänger "Beställningssida av" inte beställningen för kunderna.
-- **Statistik, analys och besöksdata** i admin/superadmin är demovärden från `admin-data.js`.
-- **Ingen e-post skickas** – varken orderbekräftelse till kund eller notis till Ultra Motors.
-  Kontaktformuläret skickar ingenting.
+- **Ingen e-post skickas** – varken orderbekräftelse till kund eller notis till Ultra Motors. Nya
+  ordrar och meddelanden från kontaktformuläret syns bara i adminportalen.
+- **Statistiken räknar sidvisningar, inte besökare.** Den samlas in utan cookies och utan besökar-id,
+  så unika besökare, sessioner och besökstid finns inte. Händelserna rensas inte automatiskt.
+- **Företagsuppgifter och Fortnox-inställningar** (adress på packsedeln, standardvillkor m.m. under
+  Inställningar) sparas fortfarande bara i den egna webbläsaren.
 - **Faktura-PDF** i admin innehåller platshållaren "bankgiro XXX-XXXX"; den riktiga fakturan skapas i Fortnox.
 
 ## Status
 
 Frontend, beställningsflöde, adminportal och backend (inloggning, personalkonton, ordrar, kunder,
-produkter) är kopplade mot databasen och driftsatta via Static Web Apps. Återstår bl.a.: e-post vid
-beställning, serverlagrade funktionsväxlar och riktig statistik.
+produkter, kontaktmeddelanden, funktionsväxlar och besöksstatistik) är kopplade mot databasen och
+driftsatta via Static Web Apps. Återstår bl.a.: e-post vid beställning/meddelande, att spara
+företagsinställningarna i backend, och Fortnox-integrationen (se `fortnox/README.md`).

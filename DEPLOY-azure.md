@@ -20,7 +20,7 @@ Ultra motors/
 1. Azure-portalen → **Skapa resurs** → **Storage account**.
 2. Namn t.ex. `ultramotorsdata`, region Sweden Central, prestanda Standard, redundans LRS (billigast).
 3. När det skapats: **Security + networking → Access keys → Show → kopiera "Connection string"**.
-   Den behövs i steg 3 (`STORAGE_CONNECTION`). Tabellerna (`orders`, `customers`, `users`, `products`) skapas
+   Den behövs i steg 3 (`STORAGE_CONNECTION`). Tabellerna (`orders`, `customers`, `users`, `products`, `messages`, `settings`, `events`) skapas
    automatiskt av koden första gången.
 
 ## Steg 2 – Skapa Static Web App
