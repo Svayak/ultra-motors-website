@@ -16,6 +16,10 @@ produkter och personalkonton. **Ingen Fortnox-koppling** – fakturering sköts 
 - **Publik order-endpoint** – kunder beställer utan inloggning. Priser och benämningar sätts av
   servern från produkttabellen; okända artiklar och artiklar som är "Slut hos leverantör" avvisas.
   Order från ett org.nr som finns som **aktiv** kund markeras som godkänd, övriga som "måste godkännas".
+  Org.nr jämförs bara på siffrorna (`556123-4567` = `5561234567`). Det kunden skrev in för ordern
+  (kontaktperson, e-post, telefon, leveransadress) sparas alltid i `leverans`, även för befintliga kunder.
+- **Inga dubblettordrar vid omförsök:** kassan skickar en `idempotencyKey` (16–64 tecken `A-Z a-z 0-9 -`).
+  Samma nyckel ger samma order tillbaka i stället för en ny. Ordrar skapas aldrig genom att skriva över en befintlig.
 - **Rate limiting** i minnet: inloggning max 8 försök/minut och IP, order max 20/minut och IP.
   Gäller per instans, inte globalt.
 
@@ -49,11 +53,11 @@ skriva en ny fil med samma funktioner och peka om `require`:t – plus en engån
 | POST | `/api/setup-admin` | `SETUP_KEY` | Skapa första admin-kontot. Spärras när ett admin-konto finns |
 | GET/POST | `/api/users` | admin | Lista / skapa personalkonto (lösenord minst 8 tecken) |
 | DELETE | `/api/users/{username}` | admin | Ta bort konto (inte det egna) |
-| POST | `/api/orders` | publik | Kund lägger beställning (max 200 rader) |
+| POST | `/api/orders` | publik | Kund lägger beställning (max 200 rader, valfri `idempotencyKey`) |
 | GET | `/api/orders` | inloggad | Lista alla ordrar |
 | GET/PATCH/DELETE | `/api/orders/{id}` | inloggad | Hämta/uppdatera/ta bort order |
-| GET/POST | `/api/customers` | inloggad | Lista/skapa kunder |
-| GET/PATCH/DELETE | `/api/customers/{id}` | inloggad | Hämta/uppdatera/ta bort kund |
+| GET/POST | `/api/customers` | inloggad | Lista/skapa kunder (kundnumret sätts av servern) |
+| GET/PATCH/DELETE | `/api/customers/{id}` | inloggad | Hämta/uppdatera/ta bort kund (409 om kunden har ordrar) |
 | GET | `/api/products` | publik | Hela produktkatalogen |
 | POST | `/api/products` | inloggad | Skapa produkt (409 om artikelnumret finns) |
 | GET | `/api/products/{artikelnr}` | publik | En produkt |

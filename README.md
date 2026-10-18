@@ -91,7 +91,8 @@ Två sätt, som skriver till **samma** databas:
 Kolumner i Excel: `kategori`, `marke`, `beskrivning`, `artikelnr`, `marke_art`, `pris_ex`, `pris_inkl`, `lager`.
 `lager` är `Beställningsvara` eller `Slut hos leverantör`.
 
-Webbshopen läser katalogen från `/api/products`; `js/products.js` används bara som reserv om API:t inte svarar.
+Webbshopen läser katalogen från `/api/products`; `js/products.js` laddas bara som reserv om API:t inte svarar
+(och i demoläge).
 Priser på ordrar sätts alltid av servern, aldrig utifrån vad webbläsaren skickar.
 
 ## Fortnox
