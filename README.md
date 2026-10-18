@@ -105,9 +105,8 @@ säkerhetsbrister som måste åtgärdas innan den används; se `fortnox/README.m
 
 Gäller skarp drift (`apiBase: "/api"`):
 
-- **Fakturastatus sparas bara lokalt.** När en order markeras som fakturerad sparas orderstatusen i
-  databasen, men själva fakturaposten (förfallodatum, skickad/betald) gör det inte. Fakturor-vyn,
-  förfallna fakturor och kundblockering fungerar därför bara i den webbläsare där ändringen gjordes.
+- **Ordrar fakturerade före 2026-10-18** saknar fakturapost i databasen (den sparades då bara
+  lokalt) och syns därför inte under Fakturor. Nya faktureringar sparas korrekt.
 - **Kreditgräns** (`kreditgrans`, `ingenGrans`) sparas inte av backend.
 - **Funktionsväxlar** (superadmin) lagras i den egna webbläsarens localStorage och påverkar inte
   andra besökare – t.ex. stänger "Beställningssida av" inte beställningen för kunderna.
@@ -120,4 +119,4 @@ Gäller skarp drift (`apiBase: "/api"`):
 
 Frontend, beställningsflöde, adminportal och backend (inloggning, personalkonton, ordrar, kunder,
 produkter) är kopplade mot databasen och driftsatta via Static Web Apps. Återstår bl.a.: e-post vid
-beställning, att spara fakturastatus i backend, serverlagrade funktionsväxlar och riktig statistik.
+beställning, serverlagrade funktionsväxlar och riktig statistik.

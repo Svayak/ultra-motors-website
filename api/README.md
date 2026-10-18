@@ -63,8 +63,9 @@ skriva en ny fil med samma funktioner och peka om `require`:t – plus en engån
 Token skickas i headern `x-ums-auth: Bearer <token>` (Static Web Apps reserverar `Authorization`).
 
 Fält som sparas via PATCH:
-- **Order:** `status`, `godkand`, `nekad`, `ny_kund`, `kundId`, `betald`, `referens`, `meddelande`.
-  Fakturaposten (`faktura`) sparas inte.
+- **Order:** `status`, `godkand`, `nekad`, `ny_kund`, `kundId`, `betald`, `referens`, `meddelande`,
+  `faktura`. `faktura` är `{ skickad, betald, forfaller: "ÅÅÅÅ-MM-DD", fakturanr? }` eller `null`
+  (ingen faktura); okända fält i den rensas bort.
 - **Kund:** `foretag`, `orgnr`, `kontakt`, `epost`, `tel`, `adress`, `betaldagar`, `rabatt`,
   `status` (`aktiv`/`pausad`/`vantar`), `noter`. Kreditgräns sparas inte.
 - **Produkt:** `kategori`, `marke`, `beskrivning`, `marke_art`, `pris_ex`, `pris_inkl`, `lager`.
