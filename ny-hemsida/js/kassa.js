@@ -91,8 +91,8 @@
       var handle = function (j) {
         if (!j || !j.ok) { var e = new Error((j && j.error) || ""); e.status = 400; throw e; }
         var nr = j.ordernr || ordernr;
-        if (j.nyKund || j.pending) finish(nr, "En orderbekräftelse har skickats till " + esc(d.epost) + ". " + nyKundNote);
-        else finish(nr, "En orderbekräftelse har skickats till " + esc(d.epost) + ". Fakturan skickas separat enligt era betalningsvillkor.");
+        if (j.nyKund || j.pending) finish(nr, nyKundNote);
+        else finish(nr, "Fakturan skickas separat enligt era betalningsvillkor.");
       };
       // Ordern sparades INTE – behåll varukorgen och låt kunden försöka igen.
       var fail = function (e) {
@@ -110,7 +110,7 @@
           .then(function (r) { return r.json().catch(function () { return null; }).then(function (j) { if (!r.ok) { var e = new Error((j && j.error) || ""); e.status = r.status; throw e; } return j; }); })
           .then(handle).catch(fail);
       } else {
-        finish(ordernr, "En orderbekräftelse skickas till " + esc(d.epost) + ". Är det ert första köp gör vi en kreditkontroll av företaget innan leverans och sparar era uppgifter för framtida köp. (Demoläge – e-post skickas skarpt av systemet.)");
+        finish(ordernr, "Är det ert första köp gör vi en kreditkontroll av företaget innan leverans och sparar era uppgifter för framtida köp. (Demoläge – ordern sparades inte.)");
       }
     });
   }
