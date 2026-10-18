@@ -4,24 +4,25 @@ const { app } = require("@azure/functions");
 const { getAccessToken, getInvoice, isPaid } = require("../fortnox");
 const { makeStore } = require("../tokenStore");
 const { makePaidStore } = require("../paidStore");
+const { safeEqual } = require("../secret");
 
 app.http("fortnoxWebhook", {
   methods: ["POST"],
-  authLevel: "anonymous", // Fortnox känner inte till funktionsnycklar – skydda med hemlig token i URL
+  authLevel: "anonymous", // Fortnox känner inte till funktionsnycklar – skydda med hemlig token
   handler: async (request, context) => {
     var env = process.env;
-    // Verifiering: kontrollera headern x-um-webhook-secret i första hand (föredra framför
-    // query-parametern ?token= som exponeras i loggar). Fortnox stöder custom headers i
-    // webhook-konfigurationen – byt där om möjligt. Fallback på ?token= för bakåtkompatibilitet.
+    // Stängd om ingen hemlighet är konfigurerad. Headern x-um-webhook-secret föredras framför
+    // ?token= (som hamnar i loggar); ?token= finns kvar om Fortnox inte kan skicka egna headers.
+    if (!env.WEBHOOK_SECRET) return { status: 503, jsonBody: { error: "Webhook ej konfigurerad" } };
     const incomingSecret = request.headers.get("x-um-webhook-secret") || new URL(request.url).searchParams.get("token");
-    if (env.WEBHOOK_SECRET && incomingSecret !== env.WEBHOOK_SECRET) {
+    if (!safeEqual(incomingSecret, env.WEBHOOK_SECRET)) {
       return { status: 401, jsonBody: { error: "Ej behörig" } };
     }
     try {
       var body = await request.json().catch(function () { return {}; });
       // Fortnox skickar bl.a. typ och id/DocumentNumber för den ändrade fakturan
       var docNr = body.DocumentNumber || body.documentNumber || (body.data && body.data.DocumentNumber) || body.id;
-      if (!docNr) return { status: 200, jsonBody: { ok: true, note: "Ingen faktura-id i payload – ignorerad" } };
+      if (!docNr || !/^[0-9]{1,20}$/.test(String(docNr))) return { status: 200, jsonBody: { ok: true, note: "Ingen giltig faktura-id i payload – ignorerad" } };
 
       var token = await getAccessToken(makeStore(env), env);
       var inv = await getInvoice(token, docNr);

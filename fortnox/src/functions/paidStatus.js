@@ -3,12 +3,11 @@
 const { app } = require("@azure/functions");
 const { makePaidStore } = require("../paidStore");
 
+// CORS-origin skickas bara om ALLOWED_ORIGIN uttryckligen är satt (ingen "*" som standard).
 function cors(env) {
-  return {
-    "Access-Control-Allow-Origin": env.ALLOWED_ORIGIN || "*",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type"
-  };
+  var h = { "Access-Control-Allow-Methods": "GET, OPTIONS", "Access-Control-Allow-Headers": "Content-Type" };
+  if (env.ALLOWED_ORIGIN) { h["Access-Control-Allow-Origin"] = env.ALLOWED_ORIGIN; h["Vary"] = "Origin"; }
+  return h;
 }
 
 app.http("paidStatus", {
@@ -23,7 +22,7 @@ app.http("paidStatus", {
       return { status: 200, headers: cors(env), jsonBody: { ok: true, paid: list } };
     } catch (err) {
       context.error(err);
-      return { status: 500, headers: cors(env), jsonBody: { ok: false, error: String(err.message || err) } };
+      return { status: 500, headers: cors(env), jsonBody: { ok: false, error: "Internt fel – kontrollera loggarna." } };
     }
   }
 });

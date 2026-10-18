@@ -4,6 +4,7 @@ api/node_modules/
 
 # Lokala hemligheter (ska INTE checkas in – ligger som app settings i Azure)
 api/local.settings.json
+fortnox/local.settings.json
 *.env
 .env
 

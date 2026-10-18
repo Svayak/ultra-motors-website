@@ -1,52 +1,34 @@
 // Lagrar betald-status (Azure Blob).
 //  paid.json           – lista över betalda fakturor {nr, ref(ordernr), paidAt}
 //  unpaid-snapshot.json – förra pollningens obetalda fakturor (för att upptäcka nya betalningar)
-const { BlobServiceClient } = require("@azure/storage-blob");
-
-function jsonBlob(env, name) {
-  var conn = env.AzureWebJobsStorage || env.AZURE_STORAGE_CONNECTION;
-  var container = env.FORTNOX_TOKEN_CONTAINER || "fortnox";
-  var svc, cont, blob;
-  if (conn) { svc = BlobServiceClient.fromConnectionString(conn); cont = svc.getContainerClient(container); blob = cont.getBlockBlobClient(name); }
-  return {
-    async read(def) {
-      if (!blob) return def;
-      try { await cont.createIfNotExists(); var dl = await blob.download(); var t = await stream(dl.readableStreamBody); return t ? JSON.parse(t) : def; }
-      catch (e) { return def; }
-    },
-    async write(obj) {
-      if (!blob) return;
-      await cont.createIfNotExists();
-      var s = JSON.stringify(obj);
-      await blob.upload(s, Buffer.byteLength(s), { overwrite: true });
-    }
-  };
-}
-function stream(readable) {
-  return new Promise(function (res, rej) {
-    if (!readable) return res("");
-    var c = []; readable.on("data", function (d) { c.push(Buffer.isBuffer(d) ? d : Buffer.from(d)); });
-    readable.on("end", function () { res(Buffer.concat(c).toString("utf8")); }); readable.on("error", rej);
-  });
-}
+// paid.json skrivs av både webhooken och pollningen – skrivningar villkoras med ETag så att
+// samtidiga uppdateringar inte tappar poster.
+const { container, readText, writeText, updateJson } = require("./blobStore");
 
 function makePaidStore(env) {
-  var paid = jsonBlob(env, "paid.json");
-  var snap = jsonBlob(env, "unpaid-snapshot.json");
+  const cont = container(env);
+  async function readJson(name, def) {
+    if (!cont) return def;
+    const cur = await readText(cont, name);
+    if (!cur || !cur.text) return def;
+    try { return JSON.parse(cur.text); } catch (e) { return def; }
+  }
   return {
     async addPaid(entries) {
-      var list = await paid.read([]);
-      var seen = {}; list.forEach(function (e) { seen[e.nr] = true; });
-      entries.forEach(function (e) { if (!seen[e.nr]) { list.push({ nr: e.nr, ref: e.ref || "", paidAt: new Date().toISOString() }); } });
-      // behåll senaste 1000
-      await paid.write(list.slice(-1000));
+      if (!cont || !entries.length) return;
+      await updateJson(cont, "paid.json", [], function (list) {
+        const seen = {}; list.forEach(function (e) { seen[e.nr] = true; });
+        entries.forEach(function (e) { if (!seen[e.nr]) { seen[e.nr] = true; list.push({ nr: e.nr, ref: e.ref || "", paidAt: new Date().toISOString() }); } });
+        return list.slice(-1000); // behåll senaste 1000
+      });
     },
     async listPaidSince(sinceIso) {
-      var list = await paid.read([]);
+      const list = await readJson("paid.json", []);
       return sinceIso ? list.filter(function (e) { return e.paidAt > sinceIso; }) : list;
     },
-    getSnapshot() { return snap.read([]); },
-    setSnapshot(arr) { return snap.write(arr); }
+    getSnapshot() { return readJson("unpaid-snapshot.json", []); },
+    // Skrivs bara av pollningen (en timer-instans åt gången), så ingen villkorad skrivning behövs.
+    async setSnapshot(arr) { if (cont) await writeText(cont, "unpaid-snapshot.json", JSON.stringify(arr)); }
   };
 }
 

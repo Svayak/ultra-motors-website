@@ -3,20 +3,30 @@
 const TOKEN_URL = "https://apps.fortnox.se/oauth-v1/token";
 const API = "https://api.fortnox.se/3";
 
-// --- OAuth2: byt refresh_token mot access_token (refresh roterar och måste sparas) ---
+// --- OAuth2: access_token (cachad) – förnyas med refresh_token en i taget ---
+// Fortnox roterar refresh_token vid varje förnyelse och den gamla slutar gälla. Därför:
+// 1) använd cachad access_token så länge den gäller, 2) förnya bara under lås (blob-lease),
+// 3) kolla cachen igen när låset väl är taget – en annan instans kan just ha förnyat.
 async function getAccessToken(store, env) {
-  const refresh = await store.getRefreshToken();
-  const basic = Buffer.from(env.FORTNOX_CLIENT_ID + ":" + env.FORTNOX_CLIENT_SECRET).toString("base64");
-  const res = await fetch(TOKEN_URL, {
-    method: "POST",
-    headers: { Authorization: "Basic " + basic, "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: refresh })
+  const cached = await store.getCachedAccessToken();
+  if (cached) return cached;
+  return store.withRefreshLock(async function (lock) {
+    const again = await store.getCachedAccessToken();
+    if (again) return again;
+    const refresh = await lock.getRefreshToken();
+    const basic = Buffer.from(env.FORTNOX_CLIENT_ID + ":" + env.FORTNOX_CLIENT_SECRET).toString("base64");
+    const res = await fetch(TOKEN_URL, {
+      method: "POST",
+      headers: { Authorization: "Basic " + basic, "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: refresh })
+    });
+    if (!res.ok) throw new Error("Token-fel " + res.status); // svarstexten loggas inte (kan innehålla känsliga detaljer)
+    const data = await res.json();
+    // Spara den nya refresh_token FÖRST – annars är kopplingen förlorad om något fallerar efteråt.
+    if (data.refresh_token) await lock.setRefreshToken(data.refresh_token);
+    await store.setAccessToken(data.access_token, data.expires_in);
+    return data.access_token;
   });
-  if (!res.ok) throw new Error("Token-fel " + res.status + ": " + (await res.text()));
-  const data = await res.json();
-  // Fortnox roterar refresh_token – spara det nya, annars slutar kopplingen funka.
-  if (data.refresh_token) await store.setRefreshToken(data.refresh_token);
-  return data.access_token;
 }
 
 function headers(token) {
@@ -111,9 +121,18 @@ async function processOrder(order, store, env) {
 async function getInvoice(token, docNr) {
   return (await api(token, "GET", "/invoices/" + docNr)).Invoice;
 }
+// Fullt betald = saldo 0 – och fakturan är varken makulerad, en kreditfaktura eller krediterad
+// (de har också saldo 0 utan att någon betalt). OBS: fältnamnen Cancelled, Credit,
+// CreditInvoiceReference, Balance och FinalPayDate är inte verifierade mot aktuell Fortnox
+// API-dokumentation – kontrollera dem innan driftsättning.
 function isPaid(inv) {
-  // Fullt betald = saldo 0 (eller slutbetaldatum satt)
-  return inv && (Number(inv.Balance) === 0 || !!inv.FinalPayDate);
+  if (!inv) return false;
+  if (inv.Cancelled === true || String(inv.Cancelled) === "true") return false;
+  if (inv.Credit === true || String(inv.Credit) === "true") return false;
+  const ref = inv.CreditInvoiceReference;
+  if (ref != null && ref !== "" && String(ref) !== "0") return false;
+  if (inv.Balance == null || inv.Balance === "") return false;
+  return Number(inv.Balance) === 0;
 }
 // Lista aktuellt obetalda fakturor (DocumentNumber + referens till vår order)
 async function listUnpaid(token) {

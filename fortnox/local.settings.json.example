@@ -11,8 +11,7 @@
     "FORTNOX_TOKEN_CONTAINER": "fortnox",
     "WEBHOOK_SECRET": "valfri-delad-hemlighet-mellan-admin-och-funktion",
 
-    "ALLOWED_ORIGIN": "https://ultramotors.se",
-    "FORTNOX_ONLY_APPROVED": "true",
-    "FORTNOX_APPROVED_ORGNR": "556123-4567,556987-1122"
+    "FORTNOX_SETUP_SECRET": "lang-slumpmassig-strang-for-engangs-oauth",
+    "ALLOWED_ORIGIN": "https://ultramotors.se"
   }
 }
