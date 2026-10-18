@@ -1,11 +1,22 @@
 (function () {
+  // Den statiska katalogen (js/products.js, ~430 kB) laddas bara om API:t inte svarar eller
+  // i demoläge – normalt kommer katalogen från /api/products.
+  function loadStatic() {
+    if (window.PRODUCTS) return Promise.resolve(window.PRODUCTS);
+    return new Promise(function (resolve) {
+      var s = document.createElement("script"); s.src = "js/products.js";
+      s.onload = function () { resolve(window.PRODUCTS || []); };
+      s.onerror = function () { resolve([]); };
+      document.head.appendChild(s);
+    });
+  }
   function loadProducts() {
     try {
       if (window.UM_API && window.UM_API.enabled && window.UM_API.enabled() && typeof window.UM_API.listProducts === "function") {
-        return window.UM_API.listProducts().catch(function () { return window.PRODUCTS || []; });
+        return window.UM_API.listProducts().catch(loadStatic);
       }
     } catch (e) {}
-    return Promise.resolve(window.PRODUCTS || []);
+    return loadStatic();
   }
   loadProducts().then(initKassa);
 
@@ -54,6 +65,15 @@
 
   var hasItems = renderSummary();
 
+  // Idempotensnyckel: ett nytt försök med exakt samma beställning (efter ett nätverksfel där
+  // ordern kanske ändå sparades) skickar samma nyckel, så servern inte skapar en dubblett.
+  // Ändras varukorgen eller uppgifterna blir det en ny nyckel.
+  var lastAttempt = "", attemptKey = "";
+  function newKey() {
+    try { if (window.crypto && crypto.randomUUID) return crypto.randomUUID(); } catch (e) {}
+    var s = ""; for (var i = 0; i < 32; i++) s += Math.floor(Math.random() * 16).toString(16); return s;
+  }
+
   var form = el("orderform");
   if (form && hasItems) {
     form.addEventListener("submit", function (e) {
@@ -74,6 +94,10 @@
         kund: { foretag: d.foretag, orgnr: d.orgnr, kontakt: d.kontakt, epost: d.epost, tel: d.tel, adress: d.adress },
         items: ls.map(function (l) { var d = String(l.p.beskrivning || "").replace(/\b(?:VL|RL|AL|KL)\b/g, "").replace(/\s{2,}/g, " ").trim(); return { namn: ((l.p.kategori || "") + (l.p.marke ? " " + l.p.marke : "") + (d ? " (" + d + ")" : "")).trim(), artikelnr: l.p.artikelnr, antal: l.qty, pris_ex: l.p.pris_ex }; })
       };
+
+      var attempt = JSON.stringify([order.kund, order.items, order.referens, order.meddelande]); // ordernr är slumpat varje gång
+      if (attempt !== lastAttempt || !attemptKey) { lastAttempt = attempt; attemptKey = newKey(); }
+      order.idempotencyKey = attemptKey;
 
       var nyKundNote = "Eftersom detta är ert första köp gör vi en kreditkontroll av företaget innan leverans. Vi sparar era uppgifter för att förenkla framtida köp.";
       // Körs bara när ordern bevisligen är sparad – först då töms varukorgen.

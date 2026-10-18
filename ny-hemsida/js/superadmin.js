@@ -25,6 +25,7 @@
   $("#saloginbtn").addEventListener("click", tryLogin);
   $("#sapw").addEventListener("keydown", function (e) { if (e.key === "Enter") tryLogin(); });
   var suEl = $("#sauser"); if (suEl) suEl.addEventListener("keydown", function (e) { if (e.key === "Enter") tryLogin(); });
+  $("#salogout").addEventListener("click", function (e) { e.preventDefault(); if (API) API.logout(); location.reload(); });
   function enterSA() { $("#salogin").style.display = "none"; $("#saapp").style.display = ""; S = loadState(); route("funktioner"); }
   function tryLogin() {
     if (API) {

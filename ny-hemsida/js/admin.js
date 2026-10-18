@@ -22,12 +22,30 @@
     if(!API) return Promise.resolve();
     return Promise.all([API.listOrders(), API.listCustomers(), API.listProducts()]).then(function(r){
       S.orders = r[0] || []; S.customers = r[1] || []; PRODUCTS = r[2] || [];
+      synced = {}; S.orders.forEach(markSynced);
     });
   }
+  // Senast kända serverläge per order. persistOrder skickar bara fält som ändrats sedan dess,
+  // så att en flik med gammal data inte skriver över det någon annan just sparat
+  // (t.ex. att "Plockad" i en flik nollställer "Betald" som sattes i en annan).
+  var ORDER_FIELDS=["status","godkand","nekad","ny_kund","kundId","betald","faktura"];
+  var synced={};
+  function orderField(o,k){
+    var v=o[k];
+    if(k==="status") return v||"";
+    if(k==="kundId") return v||null;
+    if(k==="faktura") return v||null;
+    return !!v;
+  }
+  function markSynced(o){ var s={}; ORDER_FIELDS.forEach(function(k){ s[k]=JSON.stringify(orderField(o,k)); }); synced[o.id]=s; }
   function persistOrder(o){
     if(!API || !o || !o.id) return;
-    API.updateOrder(o.id, { status:o.status, godkand:!!o.godkand, nekad:!!o.nekad, ny_kund:!!o.ny_kund, kundId:o.kundId||null, betald:!!o.betald, faktura:o.faktura||null })
-      .catch(function(){ alert("Kunde inte spara ändringen till servern – kontrollera nätverket och ladda om sidan."); });
+    var prev=synced[o.id]||{}, changes={}, n=0;
+    ORDER_FIELDS.forEach(function(k){ var v=orderField(o,k); if(JSON.stringify(v)!==prev[k]){ changes[k]=v; n++; } });
+    if(!n) return;
+    markSynced(o);
+    API.updateOrder(o.id, changes)
+      .catch(function(){ synced[o.id]=prev; alert("Kunde inte spara ändringen till servern – kontrollera nätverket och ladda om sidan."); });
   }
   function persistCustomer(c){
     if(!API || !c) return;
@@ -43,7 +61,6 @@
     var maxn=S.customers.reduce(function(m,c){var n=parseInt(String(c.id).replace(/\D/g,""),10)||0;return n>m?n:m;},1000);
     return "K-"+(maxn+1);
   }
-  function removeCustomerRemote(id){ if(API) API.deleteCustomer(id).catch(function(){}); }
   // ---------- kategorier ----------
   function catOf(p){ var r=p&&p.kategori; return (S.catRenames&&S.catRenames[r])||r; }
   function catCounts(){
@@ -80,6 +97,10 @@
   }
   function cust(id){ return S.customers.find(function(c){return c.id===id;})||{foretag:"(okänd)",id:id}; }
   function orderCust(o){ return o.kundId ? cust(o.kundId) : (o.kundinfo||{foretag:"(ny kund)"}); }
+  // Leveransuppgifter för just denna order (det kunden skrev i kassan), med kundregistret som reserv.
+  function delivery(o,c){ var l=o.leverans||{}; return { kontakt:l.kontakt||c.kontakt||"", epost:l.epost||c.epost||"", tel:l.tel||c.tel||"", adress:l.adress||c.adress||"" }; }
+  function orgDigits(s){ return String(s||"").replace(/\D/g,""); }
+  function custByOrgnr(orgnr){ var d=orgDigits(orgnr); return d ? S.customers.find(function(c){ return orgDigits(c.orgnr)===d; }) : null; }
   function daysBetween(d){ return (Date.now()-new Date(d).getTime())/864e5; }
   function clearCharts(){ charts.forEach(function(c){try{c.destroy();}catch(e){}}); charts=[]; }
 
@@ -136,6 +157,8 @@
     if(confirm("Återställ all demodata?")){ localStorage.removeItem(KEY); S=load(); route("oversikt"); }
   });
   if(API){ var rd=$("#resetdemo"); if(rd) rd.textContent="↻ Uppdatera från servern"; }
+  // Logga ut: glöm token (den ligger annars kvar i localStorage i 12 h) och visa inloggningen igen.
+  $("#logout").addEventListener("click", function(){ if(API) API.logout(); location.reload(); });
 
   var TITLES={oversikt:["Översikt","Nyckeltal, försäljning och besökare"],uppgifter:["Uppgifter","Ordrar att skicka och att fakturera"],ordrar:["Beställningar","Hantera ordrar och skapa packsedel/faktura"],
     kunder:["Kunder","Företagskunder, kreditgräns och villkor"],produkter:["Produkter","Katalog, priser och lager"],
@@ -360,10 +383,17 @@
     var o=S.orders.find(function(x){return x.id===id;}); var c=orderCust(o);
     var ex=o.summa_ex, moms=ex*.25, inkl=ex*1.25;
     var needApprove = !o.godkand && !o.nekad;
+    var known = !!o.kundId;   // kunden finns i registret men är inte aktiv (pausad/väntar)
+    var dl = delivery(o,c);
     var approveBox = needApprove ?
       '<div class="notice" style="border-left-color:var(--amber);background:var(--amber-bg);color:var(--amber)"><b>Måste godkännas innan plock/leverans.</b><br>'+
-        'Kund saknas i registret. Kontrollera uppgifterna innan du godkänner'+(o.betalsatt==="Faktura"?" (fakturaköp – gör ev. kreditkoll)":"")+':<br>'+
-        '<span class="mini" style="color:var(--ink)">'+esc(c.foretag)+' · org.nr '+esc(c.orgnr||"–")+' · '+esc(c.kontakt||"")+' · '+esc(c.epost||"")+' · '+esc(c.tel||"")+'<br>'+esc(c.adress||"")+'</span></div>' : '';
+        (known ? 'Kunden finns i registret men har status <b>'+esc(cap(c.status))+'</b>. Kontrollera innan du godkänner'
+               : 'Kund saknas i registret. Kontrollera uppgifterna innan du godkänner')+(o.betalsatt==="Faktura"?" (fakturaköp – gör ev. kreditkoll)":"")+':<br>'+
+        '<span class="mini" style="color:var(--ink)">'+esc(c.foretag)+' · org.nr '+esc(c.orgnr||"–")+' · '+esc(dl.kontakt)+' · '+esc(dl.epost)+' · '+esc(dl.tel)+'<br>'+esc(dl.adress)+'</span></div>' : '';
+    var lev = o.leverans||null;
+    var levDiffers = !!lev && ((lev.adress&&lev.adress!==c.adress) || (lev.kontakt&&lev.kontakt!==c.kontakt));
+    var levBox = (levDiffers && !(needApprove&&!known)) ?
+      '<div class="notice"><b>Leverans för denna order:</b> '+esc(dl.kontakt)+(dl.tel?' · '+esc(dl.tel):'')+'<br>'+esc(dl.adress)+'</div>' : '';
     var nekadBox = o.nekad ? '<div class="notice" style="border-left-color:var(--red);background:var(--red-bg);color:var(--red)"><b>Ordern är nekad.</b></div>' : '';
     var blocked = !needApprove && !o.nekad && custBlocked(o.kundId) && o.status!=="Fakturerad";
     var blockBox = blocked ? '<div class="notice" style="border-left-color:var(--red);background:var(--red-bg);color:var(--red)"><b>Kunden är blockerad.</b> Har en förfallen obetald faktura – nya ordrar kan inte plockas, skickas eller faktureras förrän den betalats. <a data-go="fakturor" data-opt=\'{"preset":"forfallen"}\' style="cursor:pointer;text-decoration:underline">Visa förfallna fakturor</a></div>' : '';
@@ -379,7 +409,8 @@
         (c.tel?'<a class="btn" style="margin-right:auto" href="tel:'+esc(String(c.tel).replace(/\s/g,""))+'">📞 Ring</a>':'')+
         '<button class="btn" id="mDeny" style="color:var(--red)">Neka</button>'+
         '<button class="btn" id="mApprove">Godkänn</button>'+
-        '<button class="btn primary" id="mApproveSave">Godkänn &amp; spara som kund</button>';
+        (known ? '<button class="btn primary" id="mApproveActivate">Godkänn &amp; aktivera kund</button>'
+               : '<button class="btn primary" id="mApproveSave">Godkänn &amp; spara som kund</button>');
     } else if (o.nekad) {
       actions = '<button class="btn" id="mReopen">Återöppna order</button>';
     } else if (blocked) {
@@ -397,7 +428,7 @@
     modal(
       '<h3>Order '+o.id+'</h3>'+
       '<div class="mini" style="margin-bottom:12px">'+o.datum+' · '+esc(c.foretag)+' ('+esc(c.orgnr||"–")+') · '+o.betalsatt+(o.ny_kund?' · <b style="color:var(--amber)">ny kund</b>':'')+'</div>'+
-      approveBox + nekadBox + blockBox + creditBox +
+      approveBox + levBox + nekadBox + blockBox + creditBox +
       '<table class="tbl"><thead><tr><th>Art.nr</th><th>Benämning</th><th class="num">Antal</th><th class="num">á-pris</th><th class="num">Summa</th></tr></thead><tbody>'+
       o.items.map(function(it){return '<tr><td>'+esc(it.artikelnr)+'</td><td>'+esc(it.namn)+'</td><td class="num">'+it.antal+'</td><td class="num">'+kr(it.pris_ex)+'</td><td class="num">'+kr(it.pris_ex*it.antal)+'</td></tr>';}).join('')+
       '</tbody></table>'+
@@ -412,6 +443,11 @@
     // Godkännande-flöde
     var ap=$("#mApprove"); if(ap) ap.addEventListener("click",function(){ o.godkand=true; save(); persistOrder(o); closeModal(); refresh(); });
     var aps=$("#mApproveSave"); if(aps) aps.addEventListener("click",function(){ approveAndSaveCustomer(o); });
+    var apa=$("#mApproveActivate"); if(apa) apa.addEventListener("click",function(){
+      var kc=S.customers.find(function(x){return x.id===o.kundId;});
+      if(kc){ kc.status="aktiv"; persistCustomer(kc); }
+      o.godkand=true; save(); persistOrder(o); closeModal(); refresh();
+    });
     var dn=$("#mDeny"); if(dn) dn.addEventListener("click",function(){ if(confirm("Neka ordern?")){ o.nekad=true; save(); persistOrder(o); closeModal(); refresh(); } });
     var ro=$("#mReopen"); if(ro) ro.addEventListener("click",function(){ o.nekad=false; save(); persistOrder(o); closeModal(); openOrder(id); });
 
@@ -434,6 +470,14 @@
 
   function approveAndSaveCustomer(o){
     var info=o.kundinfo||{};
+    // Finns redan en kund med samma org.nr (t.ex. inskrivet med/utan bindestreck) – koppla
+    // ordern dit i stället för att skapa en dubblett.
+    var befintlig=custByOrgnr(info.orgnr);
+    if(befintlig){
+      o.kundId=befintlig.id; o.godkand=true; o.ny_kund=false; save(); persistOrder(o);
+      closeModal(); alert("Org.nr finns redan som kund \""+(befintlig.foretag||"")+"\" ("+befintlig.id+"). Ordern är kopplad dit och godkänd."); refresh();
+      return;
+    }
     var nyKund={ foretag:info.foretag||"", orgnr:info.orgnr||"", kontakt:info.kontakt||"",
       epost:info.epost||"", tel:info.tel||"", adress:info.adress||"",
       betaldagar:(S.settings&&typeof S.settings.betaldagar==="number")?S.settings.betaldagar:30, kreditgrans:0, rabatt:0, status:"aktiv",
@@ -549,7 +593,14 @@
       createCustomer(c).then(function(saved){ S.customers.push(saved); save(); closeModal(); route("kunder"); })
         .catch(function(){ btn.disabled=false; btn.textContent="Spara"; alert("Kunde inte spara kunden till servern – kontrollera nätverket och försök igen."); });
     });
-    if(id){ $("#delCust").addEventListener("click",function(){ if(confirm("Ta bort kunden?")){ S.customers=S.customers.filter(function(x){return x.id!==id;}); save(); removeCustomerRemote(id); closeModal(); route("kunder"); } }); }
+    if(id){ $("#delCust").addEventListener("click",function(){
+      // Ordrar pekar på kunden – en borttagen kund skulle visas som "(okänd)" på dem.
+      if(S.orders.some(function(o){return o.kundId===id;})){ alert("Kunden har ordrar och kan inte tas bort. Sätt status Pausad i stället."); return; }
+      if(!confirm("Ta bort kunden?")) return;
+      var done=function(){ S.customers=S.customers.filter(function(x){return x.id!==id;}); save(); closeModal(); route("kunder"); };
+      if(!API){ done(); return; }
+      API.deleteCustomer(id).then(done).catch(function(e){ alert(e&&e.message||"Kunde inte ta bort kunden."); });
+    }); }
   }
 
   // ---------- PRODUKTER ----------
@@ -986,8 +1037,9 @@
     doc.setFont(undefined,"bold");doc.text("Ordernr: "+o.id.replace("UM-",""),14,y);
     doc.text("Datum: "+o.datum,140,y);doc.setFont(undefined,"normal");y+=8;
     doc.text("Kund: "+c.foretag+"  (org.nr "+(c.orgnr||"")+")",14,y);y+=5;
-    doc.text("Kontakt: "+(c.kontakt||"")+"  ·  "+(c.epost||""),14,y);y+=5;
-    doc.text("Adress: "+(c.adress||""),14,y);y+=5;
+    var dl=delivery(o,c);
+    doc.text("Kontakt: "+dl.kontakt+(dl.tel?"  ·  "+dl.tel:"")+"  ·  "+dl.epost,14,y);y+=5;
+    doc.text("Leveransadress: "+dl.adress,14,y);y+=5;
     doc.text("Antal kolli: ______    Vikt: ______ kg",14,y); y+=9;
     doc.setFont(undefined,"bold");doc.setFillColor(30,54,180);doc.setTextColor(255,255,255);doc.rect(14,y,182,7,"F");
     doc.text("Art.nr",16,y+5);doc.text("Benämning",50,y+5);doc.text("Antal",150,y+5);doc.text("Plockat",172,y+5);

@@ -1,14 +1,25 @@
 (function () {
+  // Den statiska katalogen (js/products.js, ~430 kB) laddas bara om API:t inte svarar eller
+  // i demoläge – normalt kommer katalogen från /api/products.
+  function loadStatic() {
+    if (window.PRODUCTS) return Promise.resolve(window.PRODUCTS);
+    return new Promise(function (resolve) {
+      var s = document.createElement("script"); s.src = "js/products.js";
+      s.onload = function () { resolve(window.PRODUCTS || []); };
+      s.onerror = function () { resolve([]); };
+      document.head.appendChild(s);
+    });
+  }
   function loadProducts() {
     // Försiktigt: om något i live-anropet kastar synkront (t.ex. inaktuell cachad
     // api.js utan en metod) ska sidan ändå falla tillbaka till den statiska katalogen
     // istället för att gå sönder helt.
     try {
       if (window.UM_API && window.UM_API.enabled && window.UM_API.enabled() && typeof window.UM_API.listProducts === "function") {
-        return window.UM_API.listProducts().catch(function () { return window.PRODUCTS || []; });
+        return window.UM_API.listProducts().catch(loadStatic);
       }
     } catch (e) {}
-    return Promise.resolve(window.PRODUCTS || []);
+    return loadStatic();
   }
   loadProducts().then(initShop);
 
