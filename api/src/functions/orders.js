@@ -8,6 +8,16 @@ const { json, preflight, readBody } = require("../http");
 function orderNo() { return "UM-" + new Date().getFullYear() + "-" + crypto.randomBytes(4).toString("hex").toUpperCase(); }
 function clip(s, n) { return String(s == null ? "" : s).slice(0, n); }
 
+// Fakturaposten som adminportalen sätter när en order faktureras (fakturan skapas manuellt
+// i Fortnox). Bara kända fält sparas; null/tomt = ingen faktura (t.ex. efter "Ångra").
+function cleanFaktura(v) {
+  if (!v || typeof v !== "object") return null;
+  const f = { skickad: !!v.skickad, betald: !!v.betald,
+    forfaller: /^\d{4}-\d{2}-\d{2}$/.test(String(v.forfaller || "")) ? v.forfaller : "" };
+  if (v.fakturanr != null && v.fakturanr !== "") f.fakturanr = clip(v.fakturanr, 40);
+  return f;
+}
+
 // Priser sätts HÄR, inte utifrån vad klienten skickar. Den levande produkttabellen
 // (som admin-panelen redigerar) är sanningen; den statiska catalog.json – autogenererad
 // från produkter.xlsx – är bara ett nödfallslager om en artikel av någon anledning
@@ -99,6 +109,7 @@ app.http("orderItem", {
     const allowed = ["status", "godkand", "nekad", "ny_kund", "kundId", "betald", "referens", "meddelande"];
     const changes = {};
     allowed.forEach(function (k) { if (k in b) changes[k] = (k === "referens" || k === "meddelande") ? clip(b[k], 1000) : b[k]; });
+    if ("faktura" in b) changes.faktura = cleanFaktura(b.faktura);
     const o = await repo.orders.update(id, changes);
     return o ? json(200, { ok: true, order: o }) : json(404, { ok: false });
   }

@@ -26,7 +26,7 @@
   }
   function persistOrder(o){
     if(!API || !o || !o.id) return;
-    API.updateOrder(o.id, { status:o.status, godkand:!!o.godkand, nekad:!!o.nekad, ny_kund:!!o.ny_kund, kundId:o.kundId||null, betald:!!o.betald })
+    API.updateOrder(o.id, { status:o.status, godkand:!!o.godkand, nekad:!!o.nekad, ny_kund:!!o.ny_kund, kundId:o.kundId||null, betald:!!o.betald, faktura:o.faktura||null })
       .catch(function(){ alert("Kunde inte spara ändringen till servern – kontrollera nätverket och ladda om sidan."); });
   }
   function persistCustomer(c){
@@ -769,9 +769,9 @@
         : '<p class="mini">Inga fakturor i denna vy.</p>';
       document.querySelectorAll("[data-inv]").forEach(function(b){b.addEventListener("click",function(){var o=oid(b.dataset.inv);pdfDoc(o,orderCust(o),"Faktura");});});
       document.querySelectorAll("[data-remind]").forEach(function(b){b.addEventListener("click",function(){var o=oid(b.dataset.remind);remind(o,orderCust(o));});});
-      document.querySelectorAll("[data-send]").forEach(function(b){b.addEventListener("click",function(){var o=oid(b.dataset.send);o.faktura.skickad=true;save();render();});});
-      document.querySelectorAll("[data-paid]").forEach(function(b){b.addEventListener("click",function(){var o=oid(b.dataset.paid);o.faktura.betald=true;o.betald=true;save();render();});});
-      document.querySelectorAll("[data-unpaid]").forEach(function(b){b.addEventListener("click",function(){var o=oid(b.dataset.unpaid);o.faktura.betald=false;o.betald=false;save();render();});});
+      document.querySelectorAll("[data-send]").forEach(function(b){b.addEventListener("click",function(){var o=oid(b.dataset.send);o.faktura.skickad=true;save();persistOrder(o);render();});});
+      document.querySelectorAll("[data-paid]").forEach(function(b){b.addEventListener("click",function(){var o=oid(b.dataset.paid);o.faktura.betald=true;o.betald=true;save();persistOrder(o);render();});});
+      document.querySelectorAll("[data-unpaid]").forEach(function(b){b.addEventListener("click",function(){var o=oid(b.dataset.unpaid);o.faktura.betald=false;o.betald=false;save();persistOrder(o);render();});});
       document.querySelectorAll("#invPanel th[data-col]").forEach(function(th){ th.addEventListener("click",function(){
         var col=th.dataset.col;
         if(invSort.col===col){ invSort.dir = invSort.dir===1?-1 : (invSort.dir===-1?0:1); if(invSort.dir===0) invSort.col=null; }
@@ -802,7 +802,7 @@
       var n=0;
       (j.paid||[]).forEach(function(p){
         var o=S.orders.find(function(x){ return (p.ref&&x.id===p.ref) || (x.faktura&&String(x.faktura.fakturanr)===String(p.nr)) || (x.fortnox&&String(x.fortnox.fakturanr)===String(p.nr)); });
-        if(o&&o.faktura&&!o.faktura.betald){ o.faktura.betald=true; o.betald=true; n++; }
+        if(o&&o.faktura&&!o.faktura.betald){ o.faktura.betald=true; o.betald=true; persistOrder(o); n++; }
       });
       fx.lastSync=new Date().toISOString(); save(); if(render)render();
       alert(n+" faktura(or) markerades som betald från Fortnox.");
@@ -1062,7 +1062,7 @@
     if(btn){btn.disabled=true;btn.textContent="Skickar…";}
     function done(res){
       o.fortnox={ fakturanr:res.fakturanr, skickat:res.skickat, demo:!!res.demo, ts:Date.now() };
-      markInvoiced(o); if(o.faktura) o.faktura.fakturanr=res.fakturanr; save(); closeModal();
+      markInvoiced(o); if(o.faktura) o.faktura.fakturanr=res.fakturanr; save(); persistOrder(o); closeModal();
       alert("Faktura "+res.fakturanr+" skapad i Fortnox och skickad via "+res.skickat+(res.demo?" (demoläge – ingen riktig faktura skapades).":"."));
       refresh();
     }
