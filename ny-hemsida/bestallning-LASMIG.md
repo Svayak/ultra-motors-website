@@ -1,25 +1,29 @@
 # Beställningssida – så funkar det
 
 ## Uppdatera produkter och priser
-1. Öppna **produkter.xlsx** och ändra fritt (priser, artiklar, lagerstatus, lägg till rader – t.ex. kolvringar som saknas).
-2. Dubbelklicka **konvertera-produkter.command**. Den skriver om `js/products.js` som sidan läser.
-3. Ladda om `bestall.html`.
+- **Enstaka ändringar:** gör dem i adminportalen under **Produkter**. De sparas i databasen och syns i webbshopen direkt.
+- **Större prisuppdateringar:**
+  1. Öppna **produkter.xlsx** och ändra fritt (priser, artiklar, lagerstatus, nya rader).
+  2. Dubbelklicka **konvertera-produkter.command**. Den skriver om `js/products.js` och `../api/data/catalog.json`.
+  3. Svara **j** när skriptet frågar om listan ska skickas till databasen, och logga in med ditt personalkonto.
 
-Kolumner i Excel: `kategori`, `marke`, `beskrivning`, `artikelnr`, `marke_art`, `pris_ex`, `pris_inkl`, `lager`.
+> Importen **ersätter hela katalogen** i databasen. Produkter som lagts till eller ändrats i
+> adminportalen men inte finns i Excel-filen skrivs över eller tas bort.
 
-Katalogen är importerad från era fem PDF-prislistor (489 artiklar). **Priserna är de gamla PDF-priserna och behöver uppdateras.** Vissa artiklar kan saknas – lägg till dem i Excel.
+Kolumner i Excel: `kategori`, `marke`, `beskrivning`, `artikelnr`, `marke_art`, `pris_ex`, `pris_inkl`, `lager`
+(`Beställningsvara` eller `Slut hos leverantör`).
 
-## Vad som fungerar redan nu (lokalt, utan server)
-- Sök och filtrera produkter, lägg i varukorg, ändra antal.
-- Kassa med företagsuppgifter (org.nr), leverans och val av betalsätt (faktura/kort).
-- Vid "Skicka beställning" skapas en **packsedel-PDF** att ladda ner/skriva ut.
-- Sida för **ansökan om företagskonto** (`konto.html`).
+## Flödet för kunden
+1. Välj tillverkare (ARP eller ACL).
+2. Filtrera på kategori, bilmärke och specialsatser, eller sök. Artiklar som är slut hos leverantören
+   visas bara vid sökning och kan inte beställas.
+3. Lägg i varukorgen och gå till kassan.
+4. Fyll i företagsuppgifter (org.nr) och skicka. Betalning sker alltid mot faktura.
 
-## Vad som behöver en backend när sidan publiceras
-Det här kräver en server/tjänst i drift och kopplas på vid lansering:
-- **Riktig kortbetalning** (t.ex. Stripe/Klarna) och **fakturahantering**.
-- **Inloggning** och sparade betal-/kunduppgifter.
-- **Kundkonton** som ni skapar (org.nr) efter godkänd ansökan – kunder skapar inte konton själva.
-- **Order-mejl till Ultra Motors** när en beställning kommer (vem, betalsätt, packsedel), plus bekräftelse till kunden.
+Ordern sparas i databasen. Finns org.nr som aktiv kund blir ordern godkänd direkt, annars hamnar den
+under **Måste godkännas** i adminportalen.
 
-Allt ovan är förberett i gränssnittet – det är kopplingen till betal-/mejl-/konto-tjänster som återstår.
+## Det som inte finns än
+- Ingen e-post skickas, varken orderbekräftelse till kunden eller notis till Ultra Motors.
+  Personalen behöver bevaka adminportalen.
+- Ingen kortbetalning och inga kundkonton. Kunderna identifieras bara via org.nr.

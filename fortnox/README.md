@@ -1,5 +1,10 @@
 # Fortnox-koppling (Azure Functions)
 
+> **Status: ej driftsatt.** Den här Function Appen ingår inte i GitHub-deployen (som bara publicerar
+> `ny-hemsida` + `api`), och webbshopen skickar sina ordrar till `/api/orders`, inte hit. I dag
+> faktureras ordrar manuellt i Fortnox. Åtgärda punkterna under [Kända brister](#kända-brister)
+> innan koden driftsätts.
+
 Skapar och skickar fakturor automatiskt i Fortnox när en beställning kommer in – så att bokföringen blir rätt utan manuellt arbete.
 
 ## Vad den gör
@@ -38,7 +43,7 @@ Bokföringen sköts av Fortnox precis som idag – skillnaden är att fakturan s
 - `paidStatus` (skyddad med funktionsnyckel) läses av adminportalen (knappen "Synka betald-status") som då markerar ordern Betald och släpper ev. blockering. Stödjer `?since=<ISO-tid>` för att bara hämta nytt.
 
 ### Styr vem som faktureras automatiskt
-`placeOrder` fakturerar bara fakturaorder. Med `FORTNOX_ONLY_APPROVED=true` skapas faktura **endast** för org.nr som finns i `FORTNOX_APPROVED_ORGNR` (kommaseparerat) – övriga fakturaorder markeras `pending` för manuell hantering (kreditkontroll/godkänt konto). Sätt `false` för att fakturera alla fakturaorder.
+`placeOrder` fakturerar bara fakturaorder, och skapar faktura **endast** för org.nr som finns i `FORTNOX_APPROVED_ORGNR` (kommaseparerat) – övriga fakturaorder markeras `pending` för manuell hantering (kreditkontroll/godkänt konto). `FORTNOX_ONLY_APPROVED` finns i exempelinställningarna men läses inte av koden; beteendet ovan gäller alltid.
 Sätt `ALLOWED_ORIGIN` till hemsidans adress för korrekt CORS.
 
 ## Exempel – anrop
@@ -59,3 +64,26 @@ Content-Type: application/json
 ## Säkerhet
 - Client Secret och tokens ligger ENBART i Azure (Application settings / Blob) – aldrig i den publika hemsidan.
 - Överväg Azure Key Vault för hemligheterna.
+
+## Kända brister
+Funna vid kodgranskning 2026-10-18. Måste åtgärdas innan driftsättning:
+
+1. **`placeOrder` litar på klientens priser och e-post.** Endpointen är publik och skapar + skickar en
+   riktig faktura med de `pris_ex`, `antal`, `rabatt` och `epost` som anroparen skickar. Org.nr är
+   offentliga, så vem som helst kan skapa fakturor med valfria belopp i en godkänd kunds namn och
+   få dem skickade till valfri adress. Priser bör slås upp på servern (som `api/` gör) eller så bör
+   endpointen tas bort och fakturering bara ske från admin.
+2. **Refresh-token kan tappas vid samtidiga anrop.** Varje anrop förnyar token och Fortnox roterar
+   den. Kör webhook, pollning och manuell fakturering samtidigt kan ett anrop använda en redan
+   förbrukad token och skriva över den giltiga, och då slutar kopplingen fungera tills OAuth görs om.
+   Cacha access-token (giltig ca 1 h) och serialisera förnyelsen.
+3. **OAuth-återanropet krockar med funktionsnyckeln.** `fortnoxAuth` har `authLevel: "function"`,
+   vars nyckel skickas som `?code=`. Fortnox skickar också tillbaka auktoriseringskoden som `?code=`,
+   så återanropet bör nekas av Azure. `state` kontrolleras inte heller. (Ej testat skarpt.)
+4. **"Betald" kan vara fel.** `pollPaidInvoices` tolkar alla fakturor som försvunnit ur obetald-listan
+   som betalda, även makulerade och krediterade. `isPaid` har samma risk vid saldo 0.
+5. **Adminportalen når inte funktionen.** CSP:n i `ny-hemsida/staticwebapp.config.json` har
+   `connect-src 'self'`, så anrop till en annan domän blockeras. Funktionsnyckel och delad
+   hemlighet sparas dessutom i klartext i webbläsarens localStorage.
+6. Webhooken är helt öppen om `WEBHOOK_SECRET` inte är satt, och `paidStore` skriver över
+   `paid.json` utan låsning (samtidiga skrivningar kan tappa poster).

@@ -20,7 +20,7 @@ Ultra motors/
 1. Azure-portalen → **Skapa resurs** → **Storage account**.
 2. Namn t.ex. `ultramotorsdata`, region Sweden Central, prestanda Standard, redundans LRS (billigast).
 3. När det skapats: **Security + networking → Access keys → Show → kopiera "Connection string"**.
-   Den behövs i steg 3 (`STORAGE_CONNECTION`). Tabellerna (`orders`, `customers`, `users`) skapas
+   Den behövs i steg 3 (`STORAGE_CONNECTION`). Tabellerna (`orders`, `customers`, `users`, `products`) skapas
    automatiskt av koden första gången.
 
 ## Steg 2 – Skapa Static Web App
@@ -57,6 +57,10 @@ window.UM_CONFIG = { apiBase: "/api", orderEndpoint: "" };
 ```
 
 Commit + push → Static Web Apps bygger om automatiskt. Nu går beställningar till databasen.
+
+(Detta är redan gjort i repot. Fyll sedan produkttabellen genom att köra
+`ny-hemsida/konvertera-produkter.command` och svara **j** på frågan om import – kräver
+admin-kontot från steg 5.)
 
 ## Steg 5 – Skapa första admin-kontot
 
