@@ -21,7 +21,8 @@
     } catch (e) {}
     return loadStatic();
   }
-  loadProducts().then(initShop);
+  // Vänta även på funktionsväxlarna (t.ex. om beställningen är stängd) innan sidan ritas.
+  Promise.all([loadProducts(), window.umFlagsReady || Promise.resolve()]).then(function (r) { initShop(r[0]); });
 
   function initShop(RAW_PRODUCTS) {
   // Normalisera märkesfältet till ett rent bilmärke

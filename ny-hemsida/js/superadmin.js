@@ -8,10 +8,16 @@
   var num = function (n) { return new Intl.NumberFormat("sv-SE").format(Math.round(n)); };
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function loadState() {
-    try { var raw = localStorage.getItem(KEY); if (raw) { var o = JSON.parse(raw); if (o.version === window.SEED.version) return o; } } catch (e) {}
-    return JSON.parse(JSON.stringify(window.SEED));
+    var o = null;
+    try { var raw = localStorage.getItem(KEY); if (raw) { o = JSON.parse(raw); if (o.version !== window.SEED.version) o = null; } } catch (e) { o = null; }
+    if (!o) o = JSON.parse(JSON.stringify(window.SEED));
+    // Skarp drift: börja tomt – demodatans ordrar/kunder får aldrig visas som om de vore riktiga.
+    if (API) { o.orders = []; o.customers = []; o.messages = []; }
+    return o;
   }
-  function saveState() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+  function saveState() { try { localStorage.setItem(KEY, JSON.stringify(localCopy(S))); } catch (e) {} }
+  // I skarp drift hämtas ordrar och kunder från servern – spara dem inte (personuppgifter) i webbläsaren.
+  function localCopy(st) { if (!API) return st; var c = Object.assign({}, st); delete c.orders; delete c.customers; delete c.messages; return c; }
   function clearCharts() { charts.forEach(function (c) { try { c.destroy(); } catch (e) {} }); charts = []; }
   function cust(id) { return (S.customers || []).find(function (c) { return c.id === id; }) || { foretag: "(okänd)" }; }
   function orderCust(o) { return o.kundId ? cust(o.kundId) : (o.kundinfo || { foretag: "(ny kund)" }); }
@@ -26,7 +32,15 @@
   $("#sapw").addEventListener("keydown", function (e) { if (e.key === "Enter") tryLogin(); });
   var suEl = $("#sauser"); if (suEl) suEl.addEventListener("keydown", function (e) { if (e.key === "Enter") tryLogin(); });
   $("#salogout").addEventListener("click", function (e) { e.preventDefault(); if (API) API.logout(); location.reload(); });
-  function enterSA() { $("#salogin").style.display = "none"; $("#saapp").style.display = ""; S = loadState(); route("funktioner"); }
+  function enterSA() {
+    $("#salogin").style.display = "none"; $("#saapp").style.display = ""; S = loadState();
+    if (!API) { route("funktioner"); return; }
+    // Skarp drift: statistiken ska bygga på riktiga ordrar/kunder/produkter, inte demodatan.
+    Promise.all([API.listOrders(), API.listCustomers(), API.listProducts(), window.umFlagsReady])
+      .then(function (r) { S.orders = r[0] || []; S.customers = r[1] || []; PRODUCTS = r[2] || []; S.extraProducts = []; })
+      .catch(function () { alert("Kunde inte hämta data från servern – statistiken kan vara ofullständig."); })
+      .then(function () { route("funktioner"); });
+  }
   function tryLogin() {
     if (API) {
       var u = (($("#sauser") && $("#sauser").value) || "").trim(), p = $("#sapw").value;
@@ -66,7 +80,8 @@
     var f = window.umFlags();
     var on = FLAG_META.filter(function (m) { return f[m.key]; }).length;
     $("#saview").innerHTML =
-      '<div class="sa-head"><h2>Funktioner</h2><p>' + on + ' av ' + FLAG_META.length + ' funktioner aktiva. Ändringar slår igenom direkt på publika sidor och i admin.</p></div>' +
+      '<div class="sa-head"><h2>Funktioner</h2><p>' + on + ' av ' + FLAG_META.length + ' funktioner aktiva. ' +
+        (API ? 'Växlarna sparas i databasen och gäller för alla besökare (öppna sidor uppdateras vid nästa sidladdning).' : 'Demoläge: växlarna gäller bara i den här webbläsaren.') + '</p></div>' +
       '<div class="sa-flags">' + FLAG_META.map(function (m) {
         return '<div class="sa-flag">' +
           '<div class="sa-flag-info"><div class="sa-flag-title">' + esc(m.titel) + ' <span class="sa-chip">' + esc(m.scope) + '</span></div>' +
@@ -75,7 +90,11 @@
           '</div>';
       }).join('') + '</div>';
     document.querySelectorAll("[data-flag]").forEach(function (inp) {
-      inp.addEventListener("change", function () { window.umSetFlag(inp.dataset.flag, inp.checked); vFunktioner(); });
+      inp.addEventListener("change", function () {
+        inp.disabled = true;
+        window.umSetFlag(inp.dataset.flag, inp.checked).then(vFunktioner)
+          .catch(function () { alert("Kunde inte spara växeln – kräver admin-konto och nätverk."); vFunktioner(); });
+      });
     });
   }
 
@@ -147,6 +166,15 @@
   // ========== ANALYS ==========
   var analysRange = 30;
   function vAnalys() {
+    if (API) { // skarp drift: riktig statistik från /api/stats
+      $("#saview").innerHTML = '<div class="sa-head"><h2>Analys</h2></div><div id="saStats"><p class="mini">Hämtar statistik…</p></div>';
+      API.getStats(analysRange).then(function (st) {
+        if (tab !== "analys") return;
+        clearCharts();
+        window.UM_STATS_VIEW.render($("#saStats"), st, charts, function (d) { analysRange = d; vAnalys(); });
+      }).catch(function () { $("#saStats").innerHTML = '<p class="mini">Kunde inte hämta statistiken just nu.</p>'; });
+      return;
+    }
     var A = S.analytics || {}, k = A.kpis || {};
     $("#saview").innerHTML =
       '<div class="sa-head"><h2>Analys</h2><p>Besökare, sidor, konvertering och källor. Demovärden – koppla på GA4/Plausible/Matomo för skarp data.</p></div>' +
@@ -205,29 +233,35 @@
         '<div class="panel"><h3>Exportera / importera</h3>' +
           '<p class="mini" style="margin-bottom:10px">Exportera hela admin-datan (kunder, ordrar, inställningar) som JSON, eller klistra in en tidigare export för att återställa.</p>' +
           '<button class="btn sm primary" id="expState">⭳ Exportera state (JSON)</button>' +
-          '<div class="field" style="margin-top:14px"><label>Importera state</label><textarea id="impState" rows="4" placeholder="Klistra in JSON här…"></textarea></div>' +
-          '<button class="btn sm" id="impBtn">Importera</button></div>' +
+          // Import skriver bara lokalt – i skarp drift skulle det se ut som att datan ändrats fast den inte gjort det.
+          (API ? '<p class="mini" style="margin-top:10px">Skarp drift: exporten innehåller ordrar och kunder från databasen. Import finns bara i demoläge.</p></div>'
+               : '<div class="field" style="margin-top:14px"><label>Importera state</label><textarea id="impState" rows="4" placeholder="Klistra in JSON här…"></textarea></div>' +
+                 '<button class="btn sm" id="impBtn">Importera</button></div>') +
         '<div class="panel"><h3>Nollställning</h3><ul class="list-plain" style="margin-bottom:6px"></ul>' +
           '<div class="sa-actions">' +
-            '<button class="btn sm" id="rDemo">↺ Återställ demodata</button>' +
+            (API ? '' : '<button class="btn sm" id="rDemo">↺ Återställ demodata</button>') +
             '<button class="btn sm" id="rFlags">↺ Återställ funktioner</button>' +
             '<button class="btn sm" id="rCart">🗑 Töm varukorg (um_cart)</button>' +
-            '<button class="btn sm" id="rTrack">🗑 Rensa spårning (um_track)</button>' +
+            (API ? '' : '<button class="btn sm" id="rTrack">🗑 Rensa spårning (um_track)</button>') +
           '</div>' +
-          '<p class="mini" style="margin-top:12px">"Återställ demodata" laddar om seed-datan (version ' + window.SEED.version + ') och skriver över lokala ändringar.</p></div>' +
+          (API ? '' : '<p class="mini" style="margin-top:12px">"Återställ demodata" laddar om seed-datan (version ' + window.SEED.version + ') och skriver över lokala ändringar.</p>') + '</div>' +
       '</div>';
     $("#expState").addEventListener("click", function () {
       var blob = new Blob([JSON.stringify(S, null, 2)], { type: "application/json" });
       var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "ultra-motors-state.json"; a.click();
     });
-    $("#impBtn").addEventListener("click", function () {
+    if ($("#impBtn")) $("#impBtn").addEventListener("click", function () {
       try { var o = JSON.parse($("#impState").value); if (!o || !o.orders) throw 0; S = o; saveState(); alert("State importerat."); route("statistik"); }
       catch (e) { alert("Ogiltig JSON."); }
     });
-    $("#rDemo").addEventListener("click", function () { if (confirm("Återställ all demodata?")) { localStorage.removeItem(KEY); S = loadState(); alert("Demodata återställd."); route("statistik"); } });
-    $("#rFlags").addEventListener("click", function () { if (confirm("Återställ alla funktioner till standard (på)?")) { window.umResetFlags(); alert("Funktioner återställda."); route("funktioner"); } });
+    if ($("#rDemo")) $("#rDemo").addEventListener("click", function () { if (confirm("Återställ all demodata?")) { localStorage.removeItem(KEY); S = loadState(); alert("Demodata återställd."); route("statistik"); } });
+    $("#rFlags").addEventListener("click", function () {
+      if (!confirm("Återställ alla funktioner till standard?" + (API ? " Gäller alla besökare." : ""))) return;
+      window.umResetFlags().then(function () { alert("Funktioner återställda."); route("funktioner"); })
+        .catch(function () { alert("Kunde inte återställa – kräver admin-konto och nätverk."); });
+    });
     $("#rCart").addEventListener("click", function () { localStorage.removeItem("um_cart"); alert("Varukorgen tömd."); });
-    $("#rTrack").addEventListener("click", function () { localStorage.removeItem("um_track"); alert("Spårningsdata rensad."); });
+    if ($("#rTrack")) $("#rTrack").addEventListener("click", function () { localStorage.removeItem("um_track"); alert("Spårningsdata rensad."); });
   }
 
   // ========== KONFIGURATION ==========

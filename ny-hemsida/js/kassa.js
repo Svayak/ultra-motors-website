@@ -18,7 +18,7 @@
     } catch (e) {}
     return loadStatic();
   }
-  loadProducts().then(initKassa);
+  Promise.all([loadProducts(), window.umFlagsReady || Promise.resolve()]).then(function (r) { initKassa(r[0]); });
 
   function initKassa(PRODUCTS) {
   var byArt = {};
@@ -64,6 +64,12 @@
   }
 
   var hasItems = renderSummary();
+
+  // Funktionsväxel: beställningen kan stängas av i superadmin (servern nekar då också ordrar).
+  if (hasItems && window.umFlag && !window.umFlag("bestallning")) {
+    el("checkout-card").innerHTML = '<h3>Beställning tillfälligt stängd</h3><p style="color:var(--color-muted)">Vår onlinebeställning är för tillfället avstängd. Kontakta oss gärna: <a href="mailto:info@ultramotors.se">info@ultramotors.se</a> · <a href="tel:+4685509465">08-550 946 55</a>.</p>';
+    hasItems = false;
+  }
 
   // Idempotensnyckel: ett nytt försök med exakt samma beställning (efter ett nätverksfel där
   // ordern kanske ändå sparades) skickar samma nyckel, så servern inte skapar en dubblett.

@@ -10,7 +10,13 @@
   var num = function (n) { return new Intl.NumberFormat("sv-SE").format(Math.round(n)); };
   function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
   function flag(n){ return window.umFlag ? window.umFlag(n) : true; } // funktionsväxlar (superadmin)
-  function save(){ localStorage.setItem(KEY, JSON.stringify(S)); }
+  // I skarp drift kommer ordrar, kunder och meddelanden från servern – de sparas inte i webbläsaren
+  // (personuppgifter), bara lokala inställningar och demodata.
+  function save(){
+    var copy=S;
+    if(API){ copy=Object.assign({},S); delete copy.orders; delete copy.customers; delete copy.messages; }
+    try{ localStorage.setItem(KEY, JSON.stringify(copy)); }catch(e){}
+  }
 
   // ---------- backend (API) ----------
   // Aktiveras när UM_CONFIG.apiBase är satt. Annars körs allt lokalt (demoläge).
@@ -20,8 +26,8 @@
   if(API){ var demoBadge=$(".badge-demo"); if(demoBadge) demoBadge.style.display="none"; }
   function loadRemote(){
     if(!API) return Promise.resolve();
-    return Promise.all([API.listOrders(), API.listCustomers(), API.listProducts()]).then(function(r){
-      S.orders = r[0] || []; S.customers = r[1] || []; PRODUCTS = r[2] || [];
+    return Promise.all([API.listOrders(), API.listCustomers(), API.listProducts(), API.listMessages().catch(function(){ return []; })]).then(function(r){
+      S.orders = r[0] || []; S.customers = r[1] || []; PRODUCTS = r[2] || []; S.messages = r[3] || [];
       synced = {}; S.orders.forEach(markSynced);
     });
   }
@@ -92,8 +98,12 @@
     S.extraCats=S.extraCats||[]; S.extraCats.push(name); save(); return true;
   }
   function load(){
-    try { var raw = localStorage.getItem(KEY); if (raw){ var o=JSON.parse(raw); if(o.version===window.SEED.version) return o; } } catch(e){}
-    return JSON.parse(JSON.stringify(window.SEED));
+    var o=null;
+    try { var raw = localStorage.getItem(KEY); if (raw){ o=JSON.parse(raw); if(o.version!==window.SEED.version) o=null; } } catch(e){ o=null; }
+    if(!o) o=JSON.parse(JSON.stringify(window.SEED));
+    // Skarp drift: börja tomt – demodatans ordrar/kunder får aldrig visas som om de vore riktiga.
+    if(API){ o.orders=[]; o.customers=[]; o.messages=[]; }
+    return o;
   }
   function cust(id){ return S.customers.find(function(c){return c.id===id;})||{foretag:"(okänd)",id:id}; }
   function orderCust(o){ return o.kundId ? cust(o.kundId) : (o.kundinfo||{foretag:"(ny kund)"}); }
@@ -162,7 +172,7 @@
 
   var TITLES={oversikt:["Översikt","Nyckeltal, försäljning och besökare"],uppgifter:["Uppgifter","Ordrar att skicka och att fakturera"],ordrar:["Beställningar","Hantera ordrar och skapa packsedel/faktura"],
     kunder:["Kunder","Företagskunder, kreditgräns och villkor"],produkter:["Produkter","Katalog, priser och lager"],
-    fakturor:["Fakturor","Skapade fakturor och betalstatus"],analys:["Analys","Besökare, sidor, konvertering och källor"],installningar:["Inställningar","Företagsuppgifter och villkor"]};
+    fakturor:["Fakturor","Skapade fakturor och betalstatus"],analys:["Analys","Besökare, sidor, konvertering och källor"],meddelanden:["Meddelanden","Från kontaktformuläret på hemsidan"],installningar:["Inställningar","Företagsuppgifter och villkor"]};
 
   var routeOpts={}, currentView="oversikt";
   function refresh(){ route(currentView, routeOpts); }
@@ -171,13 +181,15 @@
     clearCharts();
     document.querySelectorAll(".navlink[data-view]").forEach(function(n){ n.classList.toggle("active", n.dataset.view===v); });
     $("#title").textContent=TITLES[v][0]; $("#subtitle").textContent=TITLES[v][1];
-    ({oversikt:vOversikt,uppgifter:vUppgifter,ordrar:vOrdrar,kunder:vKunder,produkter:vProdukter,fakturor:vFakturor,analys:vAnalys,installningar:vInstallningar}[v])(routeOpts);
+    ({oversikt:vOversikt,uppgifter:vUppgifter,ordrar:vOrdrar,kunder:vKunder,produkter:vProdukter,fakturor:vFakturor,analys:vAnalys,meddelanden:vMeddelanden,installningar:vInstallningar}[v])(routeOpts);
   }
 
   // ---------- ÖVERSIKT ----------
   function vOversikt(){
     var o30 = S.orders.filter(function(o){return daysBetween(o.datum)<=30;});
     var oms30 = o30.reduce(function(s,o){return s+o.summa_ex;},0);
+    var omsPrev = S.orders.filter(function(o){var d=daysBetween(o.datum);return d>30&&d<=60;}).reduce(function(s,o){return s+o.summa_ex;},0);
+    var omsD = pctDelta(oms30, omsPrev);
     var oppna = S.orders.filter(function(o){return o.status!=="Fakturerad";});
     var obet = invoiceOrders().filter(function(o){var s=invStatus(o);return s==="Skickad"||s==="Förfallen";});
     var obetSum = obet.reduce(function(s,o){return s+o.summa_ex*1.25;},0);
@@ -189,16 +201,17 @@
 
     $("#view").innerHTML =
       '<div class="kpis">'+
-        kpi("Omsättning 30 dgr", kr(oms30), "+12% mot förra", "up")+
+        kpi("Omsättning 30 dgr", kr(oms30), omsD.txt, omsD.dir)+
         kpi("Måste godkännas", attgodk, attgodk?"kräver åtgärd":"inget nytt", attgodk?"down":"", "ordrar", {preset:"attgodkanna"})+
         kpi("Öppna ordrar", oppna.length, oppna.length+" att hantera", "", "ordrar", {preset:"oppna"})+
         (flag("forfallna")?kpi("Förfallna fakturor", forf.length, kr(forfSum), forf.length?"down":"", "fakturor", {preset:"forfallen"}):"")+
         (flag("forfallna")?kpi("Blockerade kunder", blockade, blockade?"pga förfallen faktura":"inga", blockade?"down":"", "kunder"):"")+
-        kpi("Besökare 30 dgr", num(bes30), "+8%", "up")+
+        (API ? kpi("Sidvisningar 30 dgr", '<span id="kBes">…</span>', '<span id="kBesD"></span>', "", "analys")
+             : kpi("Besökare 30 dgr (demo)", num(bes30), "", ""))+
       '</div>'+
       '<div class="grid2">'+
         '<div class="panel"><h3>Omsättning per månad</h3><div class="chart-box"><canvas id="cOms"></canvas></div></div>'+
-        '<div class="panel"><h3>Besökare senaste 30 dagarna</h3><div class="chart-box"><canvas id="cBes"></canvas></div></div>'+
+        '<div class="panel"><h3>'+(API?"Sidvisningar":"Besökare (demo)")+' senaste 30 dagarna</h3><div class="chart-box"><canvas id="cBes"></canvas></div></div>'+
       '</div>'+
       '<div class="grid3">'+
         '<div class="panel"><h3>Senaste beställningar <a class="mini" data-go="ordrar" style="cursor:pointer">Visa alla →</a></h3>'+ordersTable(S.orders.slice().sort(byDate).slice(0,6))+'</div>'+
@@ -207,6 +220,7 @@
           '<li><span>Ordrar att godkänna</span><b'+(attgodk?' style="color:var(--red)"':'')+'>'+attgodk+'</b></li>'+
           '<li><span>Öppna ordrar</span><b>'+oppna.length+'</b></li>'+
           '<li><span>Kontoansökningar</span><b>'+S.customers.filter(function(c){return c.status==="vantar";}).length+'</b></li>'+
+          (API?'<li><span>Obesvarade meddelanden</span><b'+(unreadMsgs()?' style="color:var(--red)"':'')+'>'+unreadMsgs()+'</b></li>':'')+
           '</ul>'+
           '<button class="btn primary sm" data-go="uppgifter" style="margin-top:12px">Öppna uppgifter</button>'+
         '</div>'+
@@ -215,7 +229,20 @@
     // charts
     var m = revenueByMonth(6);
     charts.push(new Chart($("#cOms"),{type:"bar",data:{labels:m.labels,datasets:[{data:m.values,backgroundColor:"#1e36b4",borderRadius:6}]},options:barOpts()}));
-    charts.push(new Chart($("#cBes"),{type:"line",data:{labels:S.visitors.map(function(v){return v.datum.slice(5);}),datasets:[{data:S.visitors.map(function(v){return v.antal;}),borderColor:"#1e36b4",backgroundColor:"rgba(30,54,180,.12)",fill:true,tension:.35,pointRadius:0}]},options:lineOpts()}));
+    var drawBes=function(rows){ charts.push(new Chart($("#cBes"),{type:"line",data:{labels:rows.map(function(v){return v.datum.slice(5);}),datasets:[{data:rows.map(function(v){return v.antal;}),borderColor:"#1e36b4",backgroundColor:"rgba(30,54,180,.12)",fill:true,tension:.35,pointRadius:0}]},options:lineOpts()})); };
+    if(!API){ drawBes(S.visitors); return; }
+    API.getStats(30).then(function(st){
+      if(currentView!=="oversikt"||!$("#kBes")) return;          // användaren har hunnit byta vy
+      var d=pctDelta(st.pageviews, st.prevPageviews);
+      $("#kBes").textContent=num(st.pageviews); $("#kBesD").textContent=d.txt; $("#kBesD").parentNode.className="delta "+d.dir;
+      drawBes(st.perDay);
+    }).catch(function(){ if($("#kBes")) $("#kBes").textContent="–"; });
+  }
+  // Procentuell förändring mot föregående period, som text till KPI-rutorna.
+  function pctDelta(now,prev){
+    if(!prev) return {txt:now?"ingen jämförelse":"",dir:""};
+    var p=Math.round((now-prev)/prev*100);
+    return {txt:(p>0?"+":"")+p+"% mot förra 30 dgr",dir:p>0?"up":p<0?"down":""};
   }
   function kpi(l,v,d,dir,go,opt){
     var attr = go ? ' class="kpi click" data-go="'+go+'"'+(opt?" data-opt='"+JSON.stringify(opt)+"'":"") : ' class="kpi"';
@@ -875,9 +902,49 @@
     });
   }
 
+  // ---------- MEDDELANDEN ----------
+  function unreadMsgs(){ return (S.messages||[]).filter(function(m){return !m.hanterad;}).length; }
+  function vMeddelanden(){
+    if(!API){ $("#view").innerHTML='<div class="notice">Meddelanden från kontaktformuläret sparas i databasen och visas här i skarp drift. I demoläge skickas inget.</div>'; return; }
+    var list=S.messages||[];
+    $("#view").innerHTML='<div class="notice">Meddelanden från kontaktformuläret på hemsidan. Svara via e-post eller telefon och markera som hanterat. Ta bort meddelanden som inte längre behövs – de innehåller personuppgifter.</div>'+
+      '<div class="panel">'+(list.length? list.map(function(m){
+        return '<div style="padding:14px 4px;border-bottom:1px solid var(--border)'+(m.hanterad?';opacity:.6':'')+'">'+
+          '<div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap"><b>'+esc(m.namn)+'</b>'+
+          '<a class="mini" href="mailto:'+esc(m.epost)+'?subject='+encodeURIComponent("Ang. ditt meddelande till Ultra Motors")+'">'+esc(m.epost)+'</a>'+
+          (m.tel?'<a class="mini" href="tel:'+esc(String(m.tel).replace(/\s/g,""))+'">'+esc(m.tel)+'</a>':'')+
+          '<span class="mini" style="margin-left:auto">'+esc(String(m.skapad||"").replace("T"," ").slice(0,16))+'</span>'+
+          (m.hanterad?'<span class="pill betald">Hanterad</span>':'<span class="pill vantar">Ny</span>')+'</div>'+
+          '<div style="white-space:pre-wrap;margin:8px 0">'+esc(m.meddelande)+'</div>'+
+          '<button class="btn sm" data-mtoggle="'+esc(m.id)+'">'+(m.hanterad?"Markera som ny":"✓ Markera hanterad")+'</button> '+
+          '<button class="btn sm" data-mdel="'+esc(m.id)+'" style="color:var(--red)">Ta bort</button></div>';
+      }).join(''):'<p class="mini">Inga meddelanden.</p>')+'</div>';
+    var find=function(id){ return list.find(function(m){return m.id===id;}); };
+    document.querySelectorAll("[data-mtoggle]").forEach(function(b){ b.addEventListener("click",function(){
+      var m=find(b.dataset.mtoggle); var nv=!m.hanterad; b.disabled=true;
+      API.updateMessage(m.id,{hanterad:nv}).then(function(){ m.hanterad=nv; vMeddelanden(); })
+        .catch(function(){ b.disabled=false; alert("Kunde inte spara – kontrollera nätverket och försök igen."); });
+    }); });
+    document.querySelectorAll("[data-mdel]").forEach(function(b){ b.addEventListener("click",function(){
+      if(!confirm("Ta bort meddelandet permanent?")) return;
+      var id=b.dataset.mdel; b.disabled=true;
+      API.deleteMessage(id).then(function(){ S.messages=list.filter(function(m){return m.id!==id;}); vMeddelanden(); })
+        .catch(function(){ b.disabled=false; alert("Kunde inte ta bort – kontrollera nätverket och försök igen."); });
+    }); });
+  }
+
   // ---------- ANALYS ----------
   var analysRange=30;
   function vAnalys(){
+    if(API){ // skarp drift: riktig statistik från /api/stats
+      $("#view").innerHTML='<p class="mini">Hämtar statistik…</p>';
+      API.getStats(analysRange).then(function(st){
+        if(currentView!=="analys") return;
+        clearCharts();
+        window.UM_STATS_VIEW.render($("#view"), st, charts, function(d){ analysRange=d; vAnalys(); });
+      }).catch(function(){ $("#view").innerHTML='<p class="mini">Kunde inte hämta statistiken just nu.</p>'; });
+      return;
+    }
     var A=S.analytics||{}; var k=A.kpis||{};
     var best=(A.pages||[]).slice().sort(function(a,b){return (b.konv/b.views)-(a.konv/a.views);})[0];
     $("#view").innerHTML=

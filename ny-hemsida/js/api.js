@@ -59,6 +59,23 @@
     createProduct: function (p) { return req("POST", "/products", p, true).then(function (r) { return r.product; }); },
     updateProduct: function (artikelnr, changes) { return req("PATCH", "/products/" + encodeURIComponent(artikelnr), changes, true).then(function (r) { return r.product; }); },
     deleteProduct: function (artikelnr) { return req("DELETE", "/products/" + encodeURIComponent(artikelnr), null, true); },
-    importProducts: function (rows) { return req("POST", "/products/import", { products: rows }, true); }
+    importProducts: function (rows) { return req("POST", "/products/import", { products: rows }, true); },
+
+    // Kontaktformulär (publikt) och meddelanden (inloggad)
+    sendMessage: function (m) { return req("POST", "/messages", m, false); },
+    listMessages: function () { return req("GET", "/messages", null, true).then(function (r) { return r.messages || []; }); },
+    updateMessage: function (id, changes) { return req("PATCH", "/messages/" + encodeURIComponent(id), changes, true); },
+    deleteMessage: function (id) { return req("DELETE", "/messages/" + encodeURIComponent(id), null, true); },
+
+    // Funktionsväxlar (läses publikt, ändras av admin)
+    getFlags: function () { return req("GET", "/flags", null, false).then(function (r) { return r.flags || {}; }); },
+    setFlags: function (flags) { return req("PUT", "/flags", { flags: flags }, true).then(function (r) { return r.flags || {}; }); },
+
+    // Besöksstatistik
+    getStats: function (days) { return req("GET", "/stats?days=" + (days || 30), null, true).then(function (r) { return r.stats; }); },
+    track: function (ev) {
+      // keepalive: händelsen hinner skickas även om sidan lämnas direkt efteråt
+      try { fetch(BASE + "/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(ev), keepalive: true }).catch(function () {}); } catch (e) {}
+    }
   };
 })();
