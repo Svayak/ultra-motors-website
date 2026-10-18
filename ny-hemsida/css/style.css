@@ -387,6 +387,8 @@ p { color: var(--color-muted); }
 .pay-opt input { margin-right: 8px; }
 .order-ok { display: none; background: #eafaf0; border: 1px solid #7bd6a0; color: #14663a; border-radius: var(--radius); padding: 24px; margin-top: 24px; }
 .order-ok.open { display: block; }
+.order-err { display: none; background: #fdecec; border: 1px solid #e59a9a; color: #8a1c1c; border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; }
+.order-err.open { display: block; }
 
 @media (max-width: 900px) {
   .shop { grid-template-columns: 1fr; }

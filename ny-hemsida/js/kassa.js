@@ -62,21 +62,26 @@
       var f = e.target, d = {};
       ["foretag", "orgnr", "kontakt", "epost", "tel", "referens", "adress", "meddelande"].forEach(function (n) { d[n] = f[n].value; });
       var t = totals(ls);
+      // Lokalt nummer används bara i demoläge och mot extern orderEndpoint – mot vårt API
+      // är det serverns ordernummer som gäller (det som syns i adminportalen).
       var ordernr = "UM-" + new Date().getFullYear() + "-" + Math.floor(1000 + Math.random() * 9000);
-      if (window.umTrack) window.umTrack("order", { ordernr: ordernr, summa: t.ex, betalsatt: "Faktura" });
 
-      var btn = el("submitbtn"); btn.disabled = true; btn.textContent = "Skickar…";
+      var btn = el("submitbtn"), errBox = el("ordererr");
+      btn.disabled = true; btn.textContent = "Skickar…";
+      errBox.classList.remove("open"); errBox.textContent = "";
       var order = {
         ordernr: ordernr, referens: d.referens, meddelande: d.meddelande, epost: d.epost, betalsatt: "Faktura",
-        kund: { foretag: d.foretag, orgnr: d.orgnr, epost: d.epost, tel: d.tel, adress: d.adress },
+        kund: { foretag: d.foretag, orgnr: d.orgnr, kontakt: d.kontakt, epost: d.epost, tel: d.tel, adress: d.adress },
         items: ls.map(function (l) { var d = String(l.p.beskrivning || "").replace(/\b(?:VL|RL|AL|KL)\b/g, "").replace(/\s{2,}/g, " ").trim(); return { namn: ((l.p.kategori || "") + (l.p.marke ? " " + l.p.marke : "") + (d ? " (" + d + ")" : "")).trim(), artikelnr: l.p.artikelnr, antal: l.qty, pris_ex: l.p.pris_ex }; })
       };
 
       var nyKundNote = "Eftersom detta är ert första köp gör vi en kreditkontroll av företaget innan leverans. Vi sparar era uppgifter för att förenkla framtida köp.";
-      var finish = function (msg) {
+      // Körs bara när ordern bevisligen är sparad – först då töms varukorgen.
+      var finish = function (nr, msg) {
+        if (window.umTrack) window.umTrack("order", { ordernr: nr, summa: t.ex, betalsatt: "Faktura" });
         localStorage.removeItem("um_cart"); cart = {};
         el("summary").innerHTML = '<p class="cart-empty">Tack – din order är skickad.</p>';
-        el("checkout-card").innerHTML = '<div class="order-ok open"><b>Tack för din beställning!</b><br>Ordernummer ' + ordernr + '. ' + msg +
+        el("checkout-card").innerHTML = '<div class="order-ok open"><b>Tack för din beställning!</b><br>Ordernummer ' + esc(nr) + '. ' + msg +
           '</div><a href="bestall.html" class="btn btn--primary" style="margin-top:18px">Gör en ny beställning</a>';
         window.scrollTo({ top: 0, behavior: "smooth" });
       };
@@ -84,18 +89,28 @@
       var api = window.UM_API && window.UM_API.enabled() ? window.UM_API : null;
       var ep = (window.UM_CONFIG && window.UM_CONFIG.orderEndpoint) || "";
       var handle = function (j) {
-        if (!j || !j.ok) throw new Error((j && j.error) || "fel");
-        if (j.nyKund || j.pending) finish("En orderbekräftelse har skickats till " + esc(d.epost) + ". " + nyKundNote);
-        else finish("En orderbekräftelse har skickats till " + esc(d.epost) + ". Fakturan skickas separat enligt era betalningsvillkor.");
+        if (!j || !j.ok) { var e = new Error((j && j.error) || ""); e.status = 400; throw e; }
+        var nr = j.ordernr || ordernr;
+        if (j.nyKund || j.pending) finish(nr, "En orderbekräftelse har skickats till " + esc(d.epost) + ". " + nyKundNote);
+        else finish(nr, "En orderbekräftelse har skickats till " + esc(d.epost) + ". Fakturan skickas separat enligt era betalningsvillkor.");
       };
-      var fail = function () { finish("Vi kunde inte nå systemet just nu – din order tas emot och Ultra Motors återkommer med en orderbekräftelse via e-post."); };
+      // Ordern sparades INTE – behåll varukorgen och låt kunden försöka igen.
+      var fail = function (e) {
+        var rejected = e && e.status >= 400 && e.status < 500 && e.message;
+        errBox.textContent = rejected
+          ? "Beställningen kunde inte skickas: " + String(e.message).replace(/\.$/, "") + ". Justera varukorgen och försök igen."
+          : "Beställningen kunde inte skickas just nu. Din varukorg finns kvar – försök igen om en stund, eller kontakta oss på info@ultramotors.se / 08-550 946 55.";
+        errBox.classList.add("open");
+        btn.disabled = false; btn.textContent = "Skicka beställning";
+      };
       if (api) {
         api.createOrder(order).then(handle).catch(fail);
       } else if (ep) {
         fetch(ep, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(order) })
-          .then(function (r) { return r.json(); }).then(handle).catch(fail);
+          .then(function (r) { return r.json().catch(function () { return null; }).then(function (j) { if (!r.ok) { var e = new Error((j && j.error) || ""); e.status = r.status; throw e; } return j; }); })
+          .then(handle).catch(fail);
       } else {
-        finish("En orderbekräftelse skickas till " + esc(d.epost) + ". Är det ert första köp gör vi en kreditkontroll av företaget innan leverans och sparar era uppgifter för framtida köp. (Demoläge – e-post skickas skarpt av systemet.)");
+        finish(ordernr, "En orderbekräftelse skickas till " + esc(d.epost) + ". Är det ert första köp gör vi en kreditkontroll av företaget innan leverans och sparar era uppgifter för framtida köp. (Demoläge – e-post skickas skarpt av systemet.)");
       }
     });
   }
