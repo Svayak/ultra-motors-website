@@ -35,13 +35,17 @@ app.http("customers", {
     const list = await repo.customers.list();
     if (req.method === "GET") return json(200, { ok: true, customers: list });
 
+    // Kundnumret sätts alltid av servern – ett id från klienten ignoreras, så att en ny kund
+    // aldrig kan skriva över en befintlig. Vid samtidiga skapanden kan två anrop räkna fram
+    // samma nummer; create() vägrar då och vi provar nästa.
     const b = await readBody(req);
-    const c = cleanCust(b, {
-      id: clip(b.id, 40) || nextId(list), betaldagar: 30, rabatt: 0, status: "aktiv",
-      skapad: new Date().toISOString().slice(0, 10)
-    });
-    await repo.customers.save(c);
-    return json(200, { ok: true, customer: c });
+    const base = cleanCust(b, { betaldagar: 30, rabatt: 0, status: "aktiv", skapad: new Date().toISOString().slice(0, 10) });
+    let n = parseInt(nextId(list).slice(2), 10);
+    for (let attempt = 0; attempt < 10; attempt++, n++) {
+      const created = await repo.customers.create(Object.assign({}, base, { id: "K-" + n }));
+      if (created) return json(200, { ok: true, customer: created });
+    }
+    return json(409, { ok: false, error: "Kunde inte tilldela kundnummer – försök igen." });
   }
 });
 

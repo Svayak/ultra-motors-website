@@ -29,10 +29,19 @@
     API.updateOrder(o.id, { status:o.status, godkand:!!o.godkand, nekad:!!o.nekad, ny_kund:!!o.ny_kund, kundId:o.kundId||null, betald:!!o.betald })
       .catch(function(){ alert("Kunde inte spara ändringen till servern – kontrollera nätverket och ladda om sidan."); });
   }
-  function persistCustomer(c, isNew){
+  function persistCustomer(c){
     if(!API || !c) return;
-    var p = isNew ? API.createCustomer(c) : API.updateCustomer(c.id, c);
-    p.catch(function(){ alert("Kunde inte spara kunden till servern – kontrollera nätverket och ladda om sidan."); });
+    API.updateCustomer(c.id, c).catch(function(){ alert("Kunde inte spara kunden till servern – kontrollera nätverket och ladda om sidan."); });
+  }
+  // Ny kund: i skarp drift sätter servern kundnumret (så att två personer aldrig får samma
+  // nummer eller skriver över en befintlig kund). Löser till kunden med sitt slutliga id.
+  function createCustomer(c){
+    if(!API){ c.id=nextCustId(); return Promise.resolve(c); }
+    return API.createCustomer(c).then(function(saved){ return Object.assign(c, saved); });
+  }
+  function nextCustId(){
+    var maxn=S.customers.reduce(function(m,c){var n=parseInt(String(c.id).replace(/\D/g,""),10)||0;return n>m?n:m;},1000);
+    return "K-"+(maxn+1);
   }
   function removeCustomerRemote(id){ if(API) API.deleteCustomer(id).catch(function(){}); }
   // ---------- kategorier ----------
@@ -425,16 +434,19 @@
 
   function approveAndSaveCustomer(o){
     var info=o.kundinfo||{};
-    var maxn=S.customers.reduce(function(m,c){var n=parseInt(String(c.id).replace(/\D/g,""),10)||0;return n>m?n:m;},1000);
-    var id="K-"+(maxn+1);
-    var nyKund={ id:id, foretag:info.foretag||"", orgnr:info.orgnr||"", kontakt:info.kontakt||"",
+    var nyKund={ foretag:info.foretag||"", orgnr:info.orgnr||"", kontakt:info.kontakt||"",
       epost:info.epost||"", tel:info.tel||"", adress:info.adress||"",
       betaldagar:(S.settings&&typeof S.settings.betaldagar==="number")?S.settings.betaldagar:30, kreditgrans:0, rabatt:0, status:"aktiv",
       noter:"Skapad vid godkännande av order "+o.id, skapad:new Date().toISOString().slice(0,10) };
-    S.customers.push(nyKund);
-    o.kundId=id; o.godkand=true; o.ny_kund=false; save();
-    persistCustomer(nyKund, true); persistOrder(o);
-    closeModal(); alert("Kunden \""+(info.foretag||"")+"\" är sparad under Kunder och ordern är godkänd."); refresh();
+    var btn=$("#mApproveSave"); if(btn){ btn.disabled=true; btn.textContent="Sparar…"; }
+    createCustomer(nyKund).then(function(saved){
+      S.customers.push(saved);
+      o.kundId=saved.id; o.godkand=true; o.ny_kund=false; save(); persistOrder(o);
+      closeModal(); alert("Kunden \""+(info.foretag||"")+"\" är sparad under Kunder och ordern är godkänd."); refresh();
+    }).catch(function(){
+      if(btn){ btn.disabled=false; btn.innerHTML="Godkänn &amp; spara som kund"; }
+      alert("Kunde inte spara kunden till servern – ordern är inte godkänd. Kontrollera nätverket och försök igen.");
+    });
   }
 
   // ---------- KUNDER ----------
@@ -505,7 +517,7 @@
     document.querySelectorAll("[data-hist]").forEach(function(r){ r.addEventListener("click",function(){ openOrder(r.dataset.hist); }); });
   }
   function editCust(id){
-    var c = id? S.customers.find(function(x){return x.id===id;}) : {id:"K-"+(1000+S.customers.length+1),foretag:"",orgnr:"",kontakt:"",epost:"",tel:"",adress:"",betaldagar:((S.settings&&typeof S.settings.betaldagar==="number")?S.settings.betaldagar:30),kreditgrans:0,rabatt:0,status:"vantar",noter:"",skapad:new Date().toISOString().slice(0,10)};
+    var c = id? S.customers.find(function(x){return x.id===id;}) : {foretag:"",orgnr:"",kontakt:"",epost:"",tel:"",adress:"",betaldagar:((S.settings&&typeof S.settings.betaldagar==="number")?S.settings.betaldagar:30),kreditgrans:0,rabatt:0,status:"vantar",noter:"",skapad:new Date().toISOString().slice(0,10)};
     modal('<h3>'+(id?"Redigera kund":"Ny kund")+'</h3>'+
       (id&&custBlocked(id)?'<div class="notice" style="border-left-color:var(--red);background:var(--red-bg);color:var(--red)"><b>Blockerad för nya köp</b> – kunden har en förfallen faktura. Blockeringen släpps automatiskt när fakturan markeras som betald.</div>':'')+
       '<div class="row"><div class="field"><label>Företag</label><input id="f_foretag" value="'+esc(c.foretag)+'"></div>'+
@@ -532,7 +544,10 @@
       if($("#f_kredit")) c.kreditgrans=+$("#f_kredit").value||0;
       if($("#f_rabatt")) c.rabatt=Math.max(0,Math.min(100,+$("#f_rabatt").value||0));
       c.status=$("#f_status").value; c.noter=$("#f_noter").value;
-      if(!id) S.customers.push(c); save(); persistCustomer(c, !id); closeModal(); route("kunder");
+      if(id){ save(); persistCustomer(c); closeModal(); route("kunder"); return; }
+      var btn=$("#saveCust"); btn.disabled=true; btn.textContent="Sparar…";
+      createCustomer(c).then(function(saved){ S.customers.push(saved); save(); closeModal(); route("kunder"); })
+        .catch(function(){ btn.disabled=false; btn.textContent="Spara"; alert("Kunde inte spara kunden till servern – kontrollera nätverket och försök igen."); });
     });
     if(id){ $("#delCust").addEventListener("click",function(){ if(confirm("Ta bort kunden?")){ S.customers=S.customers.filter(function(x){return x.id!==id;}); save(); removeCustomerRemote(id); closeModal(); route("kunder"); } }); }
   }

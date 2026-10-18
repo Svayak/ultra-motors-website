@@ -51,6 +51,14 @@ async function put(table, pk, id, obj) {
   await tc(table).upsertEntity(toEntity(pk, id, obj), "Replace");
   return getOne(table, pk, id);
 }
+// Skapar en ny post men vägrar skriva över en befintlig (Table Storage svarar 409).
+// Returnerar null vid krock så anroparen kan välja ett nytt id.
+async function insert(table, pk, id, obj) {
+  await ensure(table);
+  try { await tc(table).createEntity(toEntity(pk, id, obj)); }
+  catch (e) { if (e && e.statusCode === 409) return null; throw e; }
+  return getOne(table, pk, id);
+}
 async function del(table, pk, id) { await ensure(table); try { await tc(table).deleteEntity(pk, String(id)); } catch (e) {} }
 async function patch(table, pk, id, changes) {
   const cur = await getOne(table, pk, id);
@@ -98,6 +106,7 @@ module.exports = {
     list: () => listByPartition(T_CUST, "customer"),
     get: (id) => getOne(T_CUST, "customer", id),
     save: (c) => put(T_CUST, "customer", c.id, c),
+    create: (c) => insert(T_CUST, "customer", c.id, c),
     update: (id, changes) => patch(T_CUST, "customer", id, changes),
     remove: (id) => del(T_CUST, "customer", id)
   },
